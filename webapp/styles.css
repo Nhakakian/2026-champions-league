@@ -12,6 +12,11 @@
   --good: #3fb950;
   --warn: #d29922;
   --bad: #f85149;
+  /* Age flags read as their own signal, not as an error. Deliberately
+     separate from --warn, which is amber and was too close to the
+     TE position colour to pick out at a glance. */
+  --age-young: #56d364;
+  --age-old: #ff7b72;
   --row-h: 30px;
 
   /* Position identity colours, used for text, row tint and chart slices. */
@@ -27,6 +32,7 @@
     --bg: #f6f8fa; --panel: #fff; --panel-2: #f0f3f6; --line: #d6dde5;
     --text: #1a1f26; --dim: #5c6874; --accent: #0969da;
     --good: #1a7f37; --warn: #9a6700; --bad: #cf222e;
+    --age-young: #12703a; --age-old: #a4161a;
     /* Deeper hues: the dark-theme colours wash out on a white background. */
     --c-QB: #c9257c; --c-RB: #1a7f37; --c-WR: #0b6bcb;
     --c-TE: #96690a; --c-DST: #5c6874; --c-K: #7c4dcc;
@@ -750,8 +756,10 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
    Colour is a scanning aid only -- the number is always there, so age is
    never communicated by colour alone. Bands are per position: a 27-year-old
    running back is old, a 27-year-old quarterback is not. */
-.age-young { color: var(--good, #197a3d); font-weight: 650; }
-.age-old   { color: var(--warn, #a8620a); }
-.agev { font-weight: 650; }
-.agev.age-young { color: var(--good, #197a3d); }
-.agev.age-old   { color: var(--warn, #a8620a); }
+.age-young { color: var(--age-young); font-weight: 650; }
+.age-old   { color: var(--age-old);   font-weight: 650; }
+/* On a draft row the age sits inside a dim meta line, so it needs more
+   weight than it does in the board's own column to stay readable. */
+.agev { font-weight: 700; }
+.agev.age-young { color: var(--age-young); }
+.agev.age-old   { color: var(--age-old); }
