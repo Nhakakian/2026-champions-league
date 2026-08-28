@@ -782,3 +782,9 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
   white-space: nowrap;
 }
 .prow:hover .platrank { border-color: var(--accent); color: var(--text); }
+
+/* A watch-listed player predicted to go before your next pick is the single
+   most actionable line on the page, so it is called out rather than sitting
+   in an undifferentiated list. */
+.grow.watched { background: color-mix(in srgb, var(--bad) 12%, transparent); border-radius: 4px; }
+.grow.watched .gname { font-weight: 700; }

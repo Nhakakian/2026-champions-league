@@ -277,29 +277,56 @@ function renderNeeds(mine) {
 }
 
 /* ------------------------------------------------- gone before next pick */
+/* Who disappears before you pick again.
+ *
+ * Prefers the platform ranking (the site the draft is actually run on) over
+ * market ADP: if the room is picking off Sleeper's list, Sleeper's list is
+ * the better prediction of the room. Falls back to ADP where no platform
+ * source is configured, which is what the redraft board does.
+ *
+ * The model is "take the next N undrafted players off that list", not
+ * "rank < pick number". The latter is only correct at pick 1 -- once twenty
+ * players are gone, the man ranked 25th is effectively next up, and
+ * comparing 25 against your pick number stops meaning anything.
+ */
 function renderGone(clock) {
-  if (!el('gone')) return;    // panel omitted (dynasty page has no market ADP)
+  if (!el('gone')) return;    // panel omitted on boards with no predictor
   if (clock.next == null) {
     el('gone').innerHTML = '<p class="muted">Set which seat is yours to see this.</p>';
     el('goneHint').textContent = '';
     return;
   }
-  const nextPickNumber = clock.next + 1;
-  // ADP rank is a pick number in a pure-market draft, so the comparison is direct.
-  const risky = state.players
-    .filter((p) => !state.drafted.has(p.id) && p.adp != null && p.adp < nextPickNumber)
-    .sort((a, b) => a.compositeRank - b.compositeRank)
-    .slice(0, 10);
-  el('goneHint').textContent =
-    `${clock.until} pick${clock.until === 1 ? '' : 's'} until you're up (pick ${nextPickNumber}).`;
-  el('gone').innerHTML = risky.length ? risky.map((p) => `
-    <div class="grow">
+
+  const usePlatform = state.data?.platformSourceId != null;
+  const rankOfPlayer = (p) => (usePlatform ? platformRank(p) : p.adp);
+  const label = usePlatform ? platformShort() : 'ADP';
+
+  const queue = state.players
+    .filter((p) => !state.drafted.has(p.id) && rankOfPlayer(p) != null)
+    .sort((a, b) => rankOfPlayer(a) - rankOfPlayer(b));
+
+  // The next `until` names off that list are the ones at risk.
+  const risky = queue.slice(0, Math.max(0, clock.until));
+
+  const source = usePlatform ? platformLabel() : 'market ADP';
+  el('goneHint').textContent = clock.until === 0
+    ? "You're on the clock."
+    : `${clock.until} pick${clock.until === 1 ? '' : 's'} until you're up ` +
+      `(pick ${clock.next + 1}). Next off ${source}:`;
+
+  // Ordered by the predictor, so the top of this list is the most exposed.
+  // Starred players are called out: those are the ones you meant to get.
+  el('gone').innerHTML = risky.length ? risky.map((p) => {
+    const watched = state.watch.has(p.id);
+    return `
+    <div class="grow${watched ? ' watched' : ''}" data-id="${esc(p.id)}">
       <span class="badge" style="--tier-c:${tierColor(p.tier)}">${p.tier ?? '—'}</span>
       <span class="pos pos-${p.pos}">${p.pos}</span>
-      <span class="gname">${esc(p.player)}</span>
-      <span class="gadp">ADP ${trim(p.adp)}</span>
-    </div>`).join('')
-    : '<p class="muted">Nobody available is priced to go before your next pick.</p>';
+      <span class="gname">${watched ? '★ ' : ''}${esc(p.player)}</span>
+      <span class="gadp">${esc(label)} ${trim(rankOfPlayer(p))}</span>
+    </div>`;
+  }).join('')
+    : '<p class="muted">Nobody left that the board expects to go before your next pick.</p>';
 }
 
 /* -------------------------------------------------------------- scarcity */
