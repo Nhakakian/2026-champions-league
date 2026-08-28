@@ -17,7 +17,7 @@ enabled: true
 league:
   name: Dynasty Startup
   teams: 12
-  rounds: 25            # startup dynasty rosters are deep
+  rounds: 29            # matches the Sleeper draft (29 rounds, 12 teams)
   format: superflex
   scoring: half_ppr
   snake: true
@@ -50,7 +50,28 @@ my_seat: 3            # Natty
 # Redraft rankings are NOT used here on purpose: they rank a 30-year-old above
 # a rookie, which is backwards for dynasty.
 # ---------------------------------------------------------------------------
-sources: []
+sources:
+  # Dynasty superflex / half-PPR / 12-team values from FantasyCalc's public API,
+  # pulled 2026-08-28. These are DYNASTY values, not redraft: they price age in,
+  # which is why Josh Allen is QB1 overall and Justin Jefferson sits outside the
+  # top ten. Top 350 players; FantasyCalc's rookie-pick entries ("2026 Pick
+  # 1.01") are excluded because you cannot select a pick in a startup draft.
+  #
+  # To refresh: drop a newer *fantasycalc* file into data/dynasty/ and rebuild.
+  # The newest file matching the glob wins, so the old one needs no cleanup.
+  - id: fantasycalc
+    label: FantasyCalc dynasty SF
+    short: Dyn
+    match: "*fantasycalc*"
+    weight: 1.00
+    scope: overall
+    columns:
+      player: Player
+      pos: Pos
+      team: Team
+      rank: Rank
+    polarity: rank
+
 
 composite:
   method: log_rank
