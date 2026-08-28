@@ -75,6 +75,31 @@ function ageClass(age, pos) {
   return '';
 }
 
+/* --------------------------------------------------- platform (draft site)
+ * The source flagged role: platform in config is the ranking the draft is
+ * actually run against. It is not treated as a better opinion -- its weight
+ * is whatever you set -- but it is the best available predictor of what the
+ * other managers will do next.
+ */
+function platformSource() {
+  const id = state.data?.platformSourceId;
+  return id ? state.sources.find((s) => s.id === id) : null;
+}
+function platformShort() {
+  const s = platformSource();
+  return s ? (s.short || s.label || s.id) : '';
+}
+function platformLabel() {
+  const s = platformSource();
+  return s ? (s.label || s.id) : '';
+}
+function platformRank(p) {
+  const id = state.data?.platformSourceId;
+  if (!id) return null;
+  const v = p.rawRanks?.[id];
+  return v == null ? null : v;
+}
+
 /* ------------------------------------------------------------------- boot */
 async function loadData() {
   let data = window.BOARD_DATA;

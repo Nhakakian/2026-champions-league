@@ -763,3 +763,22 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
 .agev { font-weight: 700; }
 .agev.age-young { color: var(--age-young); }
 .agev.age-old   { color: var(--age-old); }
+
+/* ------------------------------------------------------- platform rank
+   The draft site's own rank, shown beside the name on a draft row. Styled
+   as a quiet chip rather than coloured text: it is a prediction of what the
+   room does next, not a judgement about the player, and it must not compete
+   with the age flag or the note for attention. */
+.platrank {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .02em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--dim);
+  white-space: nowrap;
+}
+.prow:hover .platrank { border-color: var(--accent); color: var(--text); }

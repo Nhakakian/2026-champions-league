@@ -77,7 +77,7 @@ sources:
     label: Faraz dynasty SF
     short: Faraz
     match: "*faraz_dynasty*"
-    weight: 0.50
+    weight: 0.40
     scope: overall
     columns:
       player: name
@@ -105,11 +105,35 @@ sources:
       rank: ADP
     polarity: rank
 
+  # Tom's dynasty superflex list. Shorter than the others -- 199 players
+  # against 341/350 -- so he simply has no opinion on the deep bench. That is
+  # why his weight sits below Faraz's: with missing_penalty at 0.35, a heavy
+  # weight on a short list would push everyone he omits down the board for no
+  # reason other than his list ending.
+  - id: tom
+    label: Tom's ranking
+    short: Tom
+    match: "*tom_dynasty*"
+    weight: 0.25
+    scope: overall
+    columns:
+      player: Player
+      pos: Position
+      team: auto
+      rank: Overall
+      age: Age
+    polarity: rank
+
   - id: sleeper
     label: Sleeper dynasty SF
     short: Sleep
     match: "*sleeper_dynasty*"
-    weight: 0.30
+    # The draft is run on Sleeper, so this list is what most of the room will
+    # actually have in front of them. role: platform surfaces its rank beside
+    # every player on the draft page -- not as an opinion about who is good,
+    # but as a prediction of who disappears next.
+    role: platform
+    weight: 0.20
     scope: overall
     columns:
       player: Player
@@ -124,7 +148,7 @@ sources:
     label: FantasyCalc dynasty SF
     short: Dyn
     match: "*fantasycalc*"
-    weight: 0.20
+    weight: 0.15
     scope: overall
     columns:
       player: Player
@@ -133,6 +157,18 @@ sources:
       rank: Rank
     polarity: rank
 
+
+  - id: superflex
+    label: superflex
+    match: "superflex*"
+    weight: 0.0        # <-- SET THIS, then re-run
+    scope: overall
+    columns:
+      player: Player
+      pos: Position
+      team: auto
+      rank: Overall
+    polarity: rank
 
 composite:
   method: log_rank

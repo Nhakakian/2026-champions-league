@@ -27,6 +27,10 @@ function playerRow(p) {
   const starred = state.watch.has(p.id);
   const clock = seatOnClock();
   const note = getNote(p.id);
+  // Where the platform the draft runs on has this player. This is what the
+  // rest of the room is most likely looking at, so it predicts who goes next
+  // better than our own composite does.
+  const plat = platformRank(p);
   return `
     <div class="prow r-${p.pos || 'NA'}" data-id="${esc(p.id)}">
       <button class="star ${starred ? 'on' : ''}" data-act="watch"
@@ -34,7 +38,8 @@ function playerRow(p) {
       <span class="badge" style="--tier-c:${tierColor(p.tier)}"
             title="Tier ${p.tier ?? '—'}">${p.tier ?? '—'}</span>
       <span class="pos pos-${p.pos}">${p.pos || ''}</span>
-      <span class="pnamewrap"><span class="pname">${esc(p.player)}</span>${note ? `<span class="pnote" data-act="note" title="${esc(note)}">${esc(note)}</span>` : `<button class="noteadd" data-act="note" title="Add a note">+</button>`}</span>
+      <span class="pnamewrap"><span class="pname">${esc(p.player)}</span>${
+        plat == null ? '' : `<span class="platrank" title="${esc(platformLabel())} rank — what the rest of the draft is most likely seeing">${esc(platformShort())} ${trim(plat)}</span>`}${note ? `<span class="pnote" data-act="note" title="${esc(note)}">${esc(note)}</span>` : `<button class="noteadd" data-act="note" title="Add a note">+</button>`}</span>
       <span class="pmeta">${esc(p.team || '')}${p.age ? ` · <b class="agev${ageClass(p.age, p.pos)}">${trim(p.age)}y</b>` : ''}${p.bye ? ` · bye ${p.bye}` : ''} · #${p.compositeRank}
         ${p.adp == null ? '' : `· ADP ${trim(p.adp)}`}</span>
       <span class="pflags">${p.flags.slice(0, 2).map((f) =>

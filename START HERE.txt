@@ -14,7 +14,9 @@ DYNASTY STARTUP DRAFT (separate draft, separate everything):
   Board  webapp/dynasty-board.html   rankings, weights, filters
   Draft  webapp/dynasty.html         record picks on draft night
 
-  Its rankings go in  data/dynasty/  -- NOT data/sources/. Putting a dynasty
+  Its rankings go in  data/dynasty/  -- NOT data/sources/.
+  The grey chip beside each name on the Draft page is Sleeper's own rank:
+  the draft runs there, so it predicts who disappears next. Putting a dynasty
   list in data/sources/ would corrupt the Champions League redraft rankings.
   Picks in one draft never affect the other.
 

@@ -83,6 +83,7 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
     players: list[dict] = []
     source_meta: list[dict] = []
     market_id = next((sp["id"] for sp in specs if sp.get("role") == "market"), None)
+    platform_id = next((sp["id"] for sp in specs if sp.get("role") == "platform"), None)
 
     weights = composite.normalized_weights(
         [{"id": s.id, "weight": s.weight} for s in loaded]
@@ -171,6 +172,9 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
             "missingPenalty": float((cfg.get("composite") or {}).get("missing_penalty", 0.35)),
         },
         "adpSourceId": market_id,
+        # The site the draft is actually being run on. Its ranking predicts
+        # the room regardless of what the composite thinks.
+        "platformSourceId": platform_id,
         "positional": {},
         "flagThresholds": {
             "leagueValue": 0, "leagueReach": 0,   # no history model here

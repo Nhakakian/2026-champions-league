@@ -347,6 +347,8 @@ def main() -> int:
             "missingPenalty": float((src_cfg.get("composite") or {}).get("missing_penalty", 0.35)),
         },
         "adpSourceId": adp_source,
+        "platformSourceId": next(
+            (sp["id"] for sp in specs if sp.get("role") == "platform"), None),
         # Per-source positional boards. Independent of the composite by design:
         # nothing here is weighted or blended across sources.
         "positional": positional.build(
