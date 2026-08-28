@@ -25,20 +25,20 @@ league:
 # Seat 1 picks first in round 1; order reverses each round. You can edit this
 # live on the page -- it remembers your edits independently of the redraft.
 draft_order:
-  1: Team 1
-  2: Team 2
-  3: Team 3
-  4: Team 4
-  5: Team 5
-  6: Team 6
-  7: Team 7
-  8: Team 8
-  9: Team 9
-  10: Team 10
-  11: Team 11
-  12: Team 12
+  1: "Liran & Joe"
+  2: "Charlie"
+  3: "Natty"
+  4: "Setton & Leor"
+  5: "Mikey"
+  6: "Ben"
+  7: "Josh"
+  8: "Aaron L."
+  9: "Russ"
+  10: "Austin"
+  11: "Rutta"
+  12: "Jordy"
 
-my_seat: 1
+my_seat: 3            # Natty
 
 # ---------------------------------------------------------------------------
 # DYNASTY RANKING SOURCES
