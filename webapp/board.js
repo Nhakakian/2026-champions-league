@@ -21,6 +21,15 @@ function columns() {
     { key: 'tier', label: 'Tier', cls: 'num' },
     { key: 'posRank', label: 'Pos#', cls: 'num' },
   ];
+  // Age only exists where a source supplies it. On a dynasty board it is
+  // essential; on the redraft board no source carries it, so the column
+  // would be dead weight.
+  if (state.players.some((p) => p.age != null)) {
+    const after = cols.findIndex((c) => c.key === 'team');
+    cols.splice(after + 1, 0, { key: 'age', label: 'Age', cls: 'num',
+      title: 'Age. Green = young for the position, amber = old for it. '
+           + 'Click to sort.' });
+  }
   for (const s of state.sources) {
     cols.push({
       key: 'src:' + s.id, label: s.short || s.label || s.id, cls: 'num', src: s.id,
@@ -110,6 +119,7 @@ function render() {
         case 'pos': return `<td><span class="pos pos-${p.pos}">${p.pos || ''}</span></td>`;
         case 'team': return `<td>${esc(p.team || '—')}</td>`;
         case 'bye': return `<td class="num">${p.bye ?? '—'}</td>`;
+        case 'age': return `<td class="num age${ageClass(p.age, p.pos)}">${p.age == null ? '—' : trim(p.age)}</td>`;
         case 'tier': return `<td class="num tiercell" style="--tier-c:${tierColor(p.tier)}">` +
                             `<span class="badge">${p.tier ?? '—'}</span></td>`;
         case 'posRank': return `<td class="num">${p.posRank ?? ''}</td>`;

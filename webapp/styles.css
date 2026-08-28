@@ -745,3 +745,13 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
   color: var(--dim);
   font-size: .78rem;
 }
+
+/* --------------------------------------------------------------------- age
+   Colour is a scanning aid only -- the number is always there, so age is
+   never communicated by colour alone. Bands are per position: a 27-year-old
+   running back is old, a 27-year-old quarterback is not. */
+.age-young { color: var(--good, #197a3d); font-weight: 650; }
+.age-old   { color: var(--warn, #a8620a); }
+.agev { font-weight: 650; }
+.agev.age-young { color: var(--good, #197a3d); }
+.agev.age-old   { color: var(--warn, #a8620a); }

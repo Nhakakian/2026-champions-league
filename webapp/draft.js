@@ -35,7 +35,7 @@ function playerRow(p) {
             title="Tier ${p.tier ?? '—'}">${p.tier ?? '—'}</span>
       <span class="pos pos-${p.pos}">${p.pos || ''}</span>
       <span class="pnamewrap"><span class="pname">${esc(p.player)}</span>${note ? `<span class="pnote" data-act="note" title="${esc(note)}">${esc(note)}</span>` : `<button class="noteadd" data-act="note" title="Add a note">+</button>`}</span>
-      <span class="pmeta">${esc(p.team || '')}${p.bye ? ` · bye ${p.bye}` : ''} · #${p.compositeRank}
+      <span class="pmeta">${esc(p.team || '')}${p.age ? ` · <b class="agev${ageClass(p.age, p.pos)}">${trim(p.age)}y</b>` : ''}${p.bye ? ` · bye ${p.bye}` : ''} · #${p.compositeRank}
         ${p.adp == null ? '' : `· ADP ${trim(p.adp)}`}</span>
       <span class="pflags">${p.flags.slice(0, 2).map((f) =>
         `<span class="flag f-${f}" title="${esc(FLAG_HELP[f] || f)}">${FLAG_LABEL[f]}</span>`).join('')}</span>

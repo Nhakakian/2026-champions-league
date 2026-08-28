@@ -23,6 +23,9 @@ PLAYER_HINTS = ("player", "player name", "name", "full name")
 POS_HINTS = ("pos", "position", "player position")
 TEAM_HINTS = ("team", "nfl team", "player team", "tm")
 RANK_HINTS = ("rank", "rk", "adp", "ecr", "overall", "consensus", "avg")
+# Age is optional and only some sources carry it, but for a dynasty board it
+# is close to the whole point, so it is read wherever it is offered.
+AGE_HINTS = ("age", "player age")
 
 
 @dataclass
@@ -113,6 +116,7 @@ def load(spec: dict, path: Path) -> LoadedSource:
     rank_col = resolve("rank", RANK_HINTS, required=True)
     pos_col = resolve("pos", POS_HINTS)
     team_col = resolve("team", TEAM_HINTS)
+    age_col = resolve("age", AGE_HINTS)
 
     frame = pd.DataFrame(
         {
@@ -122,6 +126,7 @@ def load(spec: dict, path: Path) -> LoadedSource:
     )
     frame["pos"] = raw[pos_col].map(normalize_position) if pos_col else None
     frame["team"] = raw[team_col].map(normalize_team) if team_col else None
+    frame["age"] = pd.to_numeric(raw[age_col], errors="coerce") if age_col else pd.NA
     frame["name_key"] = frame["player_raw"].map(name_key)
 
     dropped = int(frame["rank_raw"].isna().sum())

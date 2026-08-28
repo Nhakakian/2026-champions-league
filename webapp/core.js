@@ -57,6 +57,24 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
 const trim = (v) => v == null ? null : (Number.isInteger(v) ? v : Math.round(v * 10) / 10);
 const tierColor = (t) => t ? PALETTE[(t - 1) % PALETTE.length] : 'var(--line)';
 
+/* Dynasty age bands. Deliberately coarse: the point is to spot the 23-year-old
+ * next to the 30-year-old while scanning, not to imply precision the sources
+ * do not have. Thresholds differ by position because a 28-year-old running
+ * back and a 28-year-old quarterback are not the same asset at all. */
+const AGE_BANDS = {           // [young at or below, old at or above]
+  QB: [25, 33],
+  RB: [23, 27],              // the cliff arrives earliest here
+  WR: [24, 30],
+  TE: [24, 31],              // and latest here
+};
+function ageClass(age, pos) {
+  if (age == null) return '';
+  const [young, old] = AGE_BANDS[pos] || [24, 29];
+  if (age <= young) return ' age-young';
+  if (age >= old) return ' age-old';
+  return '';
+}
+
 /* ------------------------------------------------------------------- boot */
 async function loadData() {
   let data = window.BOARD_DATA;

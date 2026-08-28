@@ -52,6 +52,17 @@ def _record(rec: dict, sid: str, row) -> None:
     rec["raw"][sid] = float(row.rank_raw)
 
 
+def _age_of(row):
+    """Age if this source carries one, else None. Not every source does."""
+    v = getattr(row, "age", None)
+    try:
+        if v is None or pd.isna(v):
+            return None
+    except (TypeError, ValueError):
+        return None
+    return round(float(v), 1)
+
+
 def resolve(sources: list, aliases: dict[str, str]) -> tuple[pd.DataFrame, list[dict]]:
     """Merge per-source frames into one player table.
 
@@ -76,12 +87,17 @@ def resolve(sources: list, aliases: dict[str, str]) -> tuple[pd.DataFrame, list[
                 "team": row.team,
                 "ranks": {},
                 "raw": {},
+                "age": _age_of(row),
             }
             players[key] = rec
             by_last[_last(key)].append(key)
         else:
             rec["pos"] = rec["pos"] or row.pos
             rec["team"] = rec["team"] or row.team
+            # First source to state an age wins. Sources are visited widest
+            # first, and a player's age does not depend on who is ranking him.
+            if rec.get("age") is None:
+                rec["age"] = _age_of(row)
         return rec
 
     for src in ordered:
@@ -141,6 +157,7 @@ def resolve(sources: list, aliases: dict[str, str]) -> tuple[pd.DataFrame, list[
                 "player": r["player"],
                 "pos": r["pos"],
                 "team": r["team"],
+                "age": r.get("age"),
                 **{f"rank__{sid}": r["ranks"].get(sid) for sid in (s.id for s in sources)},
                 **{f"raw__{sid}": r["raw"].get(sid) for sid in (s.id for s in sources)},
             }

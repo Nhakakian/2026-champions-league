@@ -59,7 +59,10 @@ def normalize_team(value: object) -> str | None:
     if value is None:
         return None
     token = str(value).strip().upper()
-    if not token or token in {"NAN", "-", "DST"}:
+    # Exports scraped out of a web page carry HTML entities and literal
+    # non-breaking spaces where a free agent has no team. Both mean "no team".
+    token = token.replace("&NBSP;", "").replace("\u00a0", "").strip()
+    if not token or token in {"NAN", "-", "DST", "FA", "NONE"}:
         return None
     return token
 
