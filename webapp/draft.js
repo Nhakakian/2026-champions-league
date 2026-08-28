@@ -26,6 +26,7 @@ function seatOptions(selected) {
 function playerRow(p) {
   const starred = state.watch.has(p.id);
   const clock = seatOnClock();
+  const note = getNote(p.id);
   return `
     <div class="prow r-${p.pos || 'NA'}" data-id="${esc(p.id)}">
       <button class="star ${starred ? 'on' : ''}" data-act="watch"
@@ -34,7 +35,7 @@ function playerRow(p) {
             title="Tier ${p.tier ?? '—'}">${p.tier ?? '—'}</span>
       <span class="pos pos-${p.pos}">${p.pos || ''}</span>
       <span class="pname">${esc(p.player)}</span>
-      <span class="pmeta">${esc(p.team || '')} · #${p.compositeRank}
+      <span class="pmeta">${esc(p.team || '')}${p.bye ? ` · bye ${p.bye}` : ''} · #${p.compositeRank}
         ${p.adp == null ? '' : `· ADP ${trim(p.adp)}`}</span>
       <span class="pflags">${p.flags.slice(0, 2).map((f) =>
         `<span class="flag f-${f}" title="${esc(FLAG_HELP[f] || f)}">${FLAG_LABEL[f]}</span>`).join('')}</span>
@@ -43,6 +44,8 @@ function playerRow(p) {
       <select class="seatpick" data-act="takeseat" title="Assign to someone else">
         <option value="">to…</option>${seatOptions(null)}
       </select>
+      <span class="pnote${note ? ' has' : ''}" data-act="note"
+            title="${note ? esc(note) : 'Add a note'}">${note ? esc(note) : '+ note'}</span>
     </div>`;
 }
 
@@ -371,6 +374,12 @@ function buildSeatSelect() {
 
 function wirePlayerRows(container) {
   container.addEventListener('click', (e) => {
+    // The note affordance is a span, not a button, so it is matched first.
+    const noteEl = e.target.closest('[data-act=note]');
+    if (noteEl) {
+      editNote(noteEl, noteEl.closest('[data-id]').dataset.id);
+      return;
+    }
     const btn = e.target.closest('button[data-act]');
     if (!btn) return;
     const id = btn.closest('[data-id]').dataset.id;

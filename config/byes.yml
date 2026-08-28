@@ -1,0 +1,54 @@
+# ---------------------------------------------------------------------------
+# NFL BYE WEEKS  —  2026 season
+#
+# Bye week is a property of the TEAM, so one number per team covers every
+# player on it, on BOTH the redraft board and the dynasty board.
+#
+# HOW TO FILL THIS IN: put the week number next to each team and run
+#     python3 -m pipeline.build
+# The Bye column appears on the board automatically. Teams left blank show
+# "—" rather than a guess.
+#
+# These are deliberately left EMPTY rather than filled from memory: a wrong
+# bye week is worse than a missing one, because you would only find out in
+# week 8 when you have no starting quarterback.
+#
+# Sleeper shows these in its draft board BYE column, so they can also be
+# scraped from there while logged in.
+# ---------------------------------------------------------------------------
+
+season: 2026
+
+byes:
+  ARI:
+  ATL:
+  BAL:
+  BUF:
+  CAR:
+  CHI:
+  CIN:
+  CLE:
+  DAL:
+  DEN:
+  DET:
+  GB:
+  HOU:
+  IND:
+  JAX:
+  KC:
+  LAC:
+  LAR:
+  LV:
+  MIA:
+  MIN:
+  NE:
+  NO:
+  NYG:
+  NYJ:
+  PHI:
+  PIT:
+  SEA:
+  SF:
+  TB:
+  TEN:
+  WAS:

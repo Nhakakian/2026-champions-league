@@ -637,3 +637,57 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
   border-radius: 3px;
   font-size: .92em;
 }
+
+/* ------------------------------------------------------------------ notes
+   Your own free-text note per player. Stored with the rest of the draft
+   state, so it inherits the namespace: dynasty notes and redraft notes are
+   separate sets and never appear on each other's board. */
+.notecol { max-width: 200px; }
+.notebtn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: .15rem .35rem;
+  font: inherit;
+  font-size: .82rem;
+  color: var(--muted);
+  cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notebtn:hover { border-color: var(--accent); color: var(--fg); }
+.notebtn.has {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--fg);
+  background: var(--accent-soft);
+}
+.noteinput {
+  width: 100%;
+  font: inherit;
+  font-size: .82rem;
+  padding: .15rem .35rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+}
+/* On the draft page the note sits on its own line under the player row. */
+.pnote {
+  grid-column: 1 / -1;
+  font-size: .78rem;
+  color: var(--muted);
+  padding: .1rem 0 .1rem 2.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Note affordance on a draft/dynasty player row. */
+.pnote {
+  cursor: text;
+  border-radius: 3px;
+}
+.pnote:not(.has) { opacity: .45; }
+.pnote:hover { color: var(--accent); opacity: 1; }
+.pnote.has { color: var(--fg); }

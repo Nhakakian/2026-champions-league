@@ -61,10 +61,11 @@ def register_new_sources(config_dir: Path, unregistered: list[dict]) -> None:
 
 
 def build(cfg: dict, drop_zone: Path, config_dir: Path,
-          aliases: dict) -> tuple[dict, list[str]]:
+          aliases: dict, bye_map: dict | None = None) -> tuple[dict, list[str]]:
     """Return (payload, notes). Payload mirrors board.json's shape closely
     enough that webapp/core.js can consume it unchanged."""
     notes: list[str] = []
+    bye_map = bye_map or {}
     league_cfg = cfg.get("league") or {}
     specs = cfg.get("sources") or []
 
@@ -107,6 +108,7 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
                 "player": row["player"],
                 "pos": row["pos"],
                 "team": None if pd.isna(row["team"]) else row["team"],
+                "bye": None if pd.isna(row["team"]) else bye_map.get(row["team"]),
                 "compositeRank": int(row["composite_rank"]),
                 "posRank": int(row["pos_rank"]) if pd.notna(row["pos_rank"]) else None,
                 "compositeScore": round(float(row["composite_score"]), 5),

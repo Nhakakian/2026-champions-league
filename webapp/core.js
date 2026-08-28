@@ -46,6 +46,9 @@ const state = {
   watch: new Set(),  // starred players
   order: [],         // manager names, index 0 = seat 1
   seat: null,        // 1..teams — which seat is yours
+  notes: new Map(),  // player id -> your own note. Namespaced with the
+                     // rest of the draft state, so dynasty notes and
+                     // redraft notes are separate sets entirely.
 };
 
 const el = (id) => document.getElementById(id);
@@ -511,6 +514,48 @@ function resetDraft() {
   persist();
 }
 
+/* Notes are free text you type yourself. Empty clears the note rather than
+ * storing a blank, so "has a note" stays a meaningful test. */
+function setNote(id, text) {
+  const t = (text || '').trim();
+  if (t) state.notes.set(id, t); else state.notes.delete(id);
+  persist();
+}
+function getNote(id) { return state.notes.get(id) || ''; }
+
+/* Swap the note button for an input in place. Enter or blur saves, Escape
+ * abandons. Kept inline rather than a dialog because on draft night you are
+ * typing between picks, not filling in a form. */
+function editNote(anchor, id) {
+  // On the board the note lives alone in a <td>; on a draft row it is a span
+  // among siblings. Replace the cell in the first case, the span in the second.
+  const inCell = anchor.tagName === 'BUTTON' && anchor.parentElement.tagName === 'TD';
+  const host = inCell ? anchor.parentElement : anchor;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'noteinput';
+  input.value = getNote(id);
+  input.maxLength = 200;
+  input.placeholder = 'note…';
+  let done = false;
+  const finish = (save) => {
+    if (done) return;
+    done = true;
+    if (save) setNote(id, input.value);
+    render();
+  };
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();                       // '/' focuses search otherwise
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  if (inCell) host.replaceChildren(input);
+  else host.replaceWith(input);
+  input.focus();
+  input.select();
+}
+
 function syncDrafted() { state.drafted = new Set(state.picks.map((p) => p.id)); }
 
 /* ------------------------------------------------------------ persistence */
@@ -530,6 +575,7 @@ function persist() {
       seat: state.seat,
       weights: Object.fromEntries(state.sources.filter((s) => !s.dynamic)
         .map((s) => [s.id, s.weight])),
+      notes: Object.fromEntries(state.notes),
     }));
   } catch (_) { /* private mode — the board still works, it just won't survive a reload */ }
 }
@@ -543,6 +589,7 @@ function restore() {
       return { id: p.id, seat: p.mine ? (raw.seat ?? null) : null };
     });
     state.watch = new Set(raw.watch || []);
+    state.notes = new Map(Object.entries(raw.notes || {}));
     if (Array.isArray(raw.order) && raw.order.length) state.order = raw.order;
     if (raw.seat !== undefined && raw.seat !== null) state.seat = raw.seat;
     // Weights are shared across pages so every page ranks identically.

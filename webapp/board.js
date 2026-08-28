@@ -16,6 +16,8 @@ function columns() {
     { key: 'player', label: 'Player' },
     { key: 'pos', label: 'Pos' },
     { key: 'team', label: 'Tm' },
+    { key: 'bye', label: 'Bye', cls: 'num',
+      title: 'Bye week. Blank until config/byes.yml is filled in.' },
     { key: 'tier', label: 'Tier', cls: 'num' },
     { key: 'posRank', label: 'Pos#', cls: 'num' },
   ];
@@ -32,6 +34,9 @@ function columns() {
     title: "Market pick minus this league's historical pick for the positional slot. " +
            'Negative = this league lets the slot fall to you.' });
   cols.push({ key: 'flags', label: 'Flags', sortable: false });
+  cols.push({ key: 'note', label: 'Note', sortable: false, cls: 'notecol',
+    title: 'Your own note. Click to edit. Notes are per board — dynasty '
+         + 'notes and redraft notes never mix.' });
   return cols;
 }
 
@@ -97,11 +102,18 @@ function render() {
         case 'player': return `<td class="name">${esc(p.player)}</td>`;
         case 'pos': return `<td><span class="pos pos-${p.pos}">${p.pos || ''}</span></td>`;
         case 'team': return `<td>${esc(p.team || '—')}</td>`;
+        case 'bye': return `<td class="num">${p.bye ?? '—'}</td>`;
         case 'tier': return `<td class="num tiercell" style="--tier-c:${tierColor(p.tier)}">` +
                             `<span class="badge">${p.tier ?? '—'}</span></td>`;
         case 'posRank': return `<td class="num">${p.posRank ?? ''}</td>`;
         case 'adpDelta': return `<td class="num ${cls(p.adpDelta)}">${fmt(p.adpDelta)}</td>`;
         case 'leagueDelta': return `<td class="num ${cls(p.leagueDelta, true)}">${fmt(p.leagueDelta)}</td>`;
+        case 'note': {
+          const n = getNote(p.id);
+          return `<td class="notecol"><button class="notebtn${n ? ' has' : ''}" ` +
+                 `data-act="note" title="${n ? esc(n) : 'Add a note'}">` +
+                 `${n ? esc(n) : '+'}</button></td>`;
+        }
         case 'flags': return `<td><span class="flags">${p.flags.map((f) =>
           `<span class="flag f-${f}" title="${esc(FLAG_HELP[f] || f)}">${FLAG_LABEL[f] || f}</span>`)
           .join('')}</span></td>`;
@@ -168,6 +180,8 @@ function wire() {
     if (!tr) return;
     const id = tr.dataset.id;
     if (e.target.closest('button[data-act=watch]')) { toggleWatch(id); render(); return; }
+    const nb = e.target.closest('button[data-act=note]');
+    if (nb) { editNote(nb, id); return; }
     // Shift-click records the pick as yours; a plain click defers to the snake.
     toggleDrafted(id, e.shiftKey ? true : undefined);
     render();

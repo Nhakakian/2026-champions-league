@@ -150,6 +150,10 @@ def main() -> int:
     src_cfg = _load_yaml("sources.yml")
     league_cfg = _load_yaml("league.yml")
     alias_cfg = _load_yaml("aliases.yml")
+    # Bye weeks are team-level, so one map serves both boards. Missing
+    # entries stay None and render as "—" rather than a guess.
+    bye_map = {k: v for k, v in (_load_yaml("byes.yml").get("byes") or {}).items()
+               if v is not None}
 
     specs = src_cfg.get("sources") or []
     diagnostics: dict = {
@@ -281,6 +285,7 @@ def main() -> int:
             "player": row["player"],
             "pos": row["pos"],
             "team": row["team"],
+            "bye": bye_map.get(row["team"]) if pd.notna(row["team"]) else None,
             "compositeRank": int(row["composite_rank"]),
             "posRank": int(row["pos_rank"]) if pd.notna(row["pos_rank"]) else None,
             "compositeScore": round(float(row["composite_score"]), 5),
@@ -388,7 +393,7 @@ def main() -> int:
     if dyn_cfg.get("enabled", True):
         dyn_payload, dyn_notes = dynasty_mod.build(
             dyn_cfg, ROOT / "data" / "dynasty", CONFIG,
-            alias_cfg.get("players", {}),
+            alias_cfg.get("players", {}), bye_map,
         )
         (OUT / "dynasty.json").write_text(
             json.dumps(dyn_payload, indent=1), encoding="utf-8")
