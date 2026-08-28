@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Assets are requested with a fresh query every load. This page's markup never
+     changes between builds, so a cached copy of it is harmless -- which is the
+     point: a stale HTML file can't pin you to last build's code or data. -->
+<script>
+  window.__ASSET_V = Date.now();
+  document.write('<link rel="stylesheet" href="styles.css?v=' + window.__ASSET_V + '">');
+</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Positional Rankings — Champions League</title>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1 id="leagueName">Positional</h1>
+    <nav id="nav" class="nav"></nav>
+  </div>
+  <div class="topbar-right">
+    <label class="inline">Ranker
+      <select id="sourcePick" title="One ranker at a time — these are never blended"></select>
+    </label>
+    <div class="counter"><strong id="leftCount">0</strong><span>left</span></div>
+    <button id="undoBtn" class="btn">Undo</button>
+  </div>
+</header>
+
+<section class="posbar">
+  <p class="hint" id="sourceNote"></p>
+</section>
+
+<main class="pos-main">
+  <div id="columns" class="poscols"></div>
+</main>
+
+<script>
+  for (const src of ['data.js', 'core.js', 'positional.js']) {
+    document.write('<scr' + 'ipt src="' + src + '?v=' + window.__ASSET_V + '"></scr' + 'ipt>');
+  }
+</script>
+</body>
+</html>

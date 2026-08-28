@@ -1,0 +1,117 @@
+# ---------------------------------------------------------------------------
+# RANKING SOURCES
+#
+# HOW TO ADD / UPDATE A SOURCE:
+#   1. Drop a .csv or .xlsx into  data/sources/
+#   2. Run:  python -m pipeline.build
+#   3. If it's a NEW source, the build registers it below at weight 0.0 and
+#      prints the columns it detected. Set the weight and re-run.
+#
+# UPDATING AN EXISTING SOURCE (e.g. new Faraz rankings):
+#   Just drop the new file in data/sources/. Each source picks the NEWEST file
+#   matching its `match` glob, so the old one is superseded automatically.
+#   You do not need to delete the old file or edit anything here.
+#
+# Weights are relative and get normalized, so 0.6/0.4 and 60/40 are identical.
+# You can also override these live with the sliders in the draft board.
+# ---------------------------------------------------------------------------
+
+sources:
+  - id: faraz
+    label: Faraz (Upper Hand)
+    short: Faraz          # column header on the draft board
+    match: "*faraz*"
+    weight: 0.50
+    # 'overall'    = ranks players ACROSS positions; sets cross-position value.
+    # 'positional' = only trusted for order WITHIN a position. Use this for a
+    #                source in the wrong format (e.g. a 1QB/half-PPR list in a
+    #                superflex league), where the QB-vs-everyone-else placement
+    #                is wrong but RB-vs-RB is still a good opinion.
+    scope: overall
+    # Column mapping. Use `auto` to let the profiler guess.
+    columns:
+      player: Player
+      pos: Pos
+      team: Team
+      rank: Faraz Rank
+    # 'rank'  = lower is better, values are ordinal ranks
+    # 'score' = higher is better (projected points etc); will be inverted
+    polarity: rank
+
+  # MARKET BASELINE — weight 0, so it has no say in the rankings at all.
+  # Kept loaded because it is not only a ranking: it is the market, and it is
+  # what "vs ADP", the MKT flags, "gone before your next pick" and the whole
+  # league-vs-market analysis on the History page are measured against.
+  # Deleting it would silently gut those. Its column stays on the board, dimmed.
+  - id: adp
+    label: Sleeper ADP (market reference)
+    short: ADP
+    match: "*sleeper*"
+    weight: 0.00
+    role: market
+    columns:
+      player: Player
+      pos: Pos
+      team: Team
+      rank: ADP
+    polarity: rank
+
+
+  # ---------------------------------------------------------------------------
+  # NEW SOURCE IN A DIFFERENT FORMAT (e.g. a 1QB / half-PPR list)
+  # Drop the file in data/sources/, then uncomment and set the weight. Give
+  # faraz the remaining share (0.50 each for an even split).
+  #
+  #   scope: positional  ->  the list only votes on order WITHIN a position.
+  #   Its QB-vs-RB placement is ignored, because in a 1QB list that placement
+  #   is answering a different league's question. Verified: with a half-PPR
+  #   source at 50% that has Josh Allen at 191, he still comes out QB1.
+  # ---------------------------------------------------------------------------
+  - id: joel
+    label: Joel Smyth (half PPR)
+    short: Joel
+    match: "*joel*"
+    weight: 0.50
+    # Half PPR, 1QB. His QB-vs-everyone placement answers a different league's
+    # question -- Josh Allen is his 26th player, Faraz has him 3rd -- so this
+    # list only votes on order WITHIN a position. See composite.py.
+    scope: positional
+    # This workbook carries a second sheet with his OWN tier breaks per
+    # position. The Positional Rankings page uses it verbatim rather than
+    # deriving tiers -- he drew those lines, not us.
+    positional_sheet: "Positional Rankings"
+    columns:
+      player: Player
+      pos: Position
+      team: auto
+      rank: Rank
+    polarity: rank
+
+
+
+# ---------------------------------------------------------------------------
+# COMPOSITE SETTINGS
+# ---------------------------------------------------------------------------
+composite:
+  # Weighted mean of log(rank) == weighted geometric mean.
+  # Rank distance is not linear: 1 -> 6 is a chasm, 140 -> 145 is noise.
+  # Log space respects that; a plain average does not.
+  method: log_rank
+
+  # When a source omits a player entirely, that omission is information.
+  # The player is scored on the sources that DO rank them, then pushed down
+  # by this fraction of the gap to the worst rank, scaled by the missing weight.
+  # 0.0 = ignore omissions entirely, 1.0 = treat as ranked dead last.
+  missing_penalty: 0.35
+
+# ---------------------------------------------------------------------------
+# AUTO-TIERING
+# ---------------------------------------------------------------------------
+tiers:
+  # A tier break is cut where the gap to the next player is unusually large
+  # relative to that position's own gap distribution.
+  gap_z_threshold: 1.0
+  min_tier_size: 2
+  max_tier_size: 12
+  # Positions tiered independently.
+  positions: [QB, RB, WR, TE]

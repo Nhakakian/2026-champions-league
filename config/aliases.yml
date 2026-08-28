@@ -1,0 +1,109 @@
+# ---------------------------------------------------------------------------
+# NAME ALIASES  (draft history -> canonical player name)
+#
+# WHY THIS FILE EXISTS, AND WHY IT IS NOT FUZZY MATCHING:
+# The 2023 sheet has 41 last-name-only / nickname entries. Similarity scoring
+# on these produces CONFIDENT WRONG ANSWERS, e.g.
+#     "Washington (DEF)" -> Parker Washington (WR)
+#     "Pierce (RB)"      -> Alec Pierce (WR)
+#     "Bateman (RB)"     -> Rashod Bateman (WR)
+# Position-guarding does not save you, because the 2023 position tags are
+# themselves wrong in places (Tyler Boyd is tagged TE; he is a WR).
+# So these are resolved by hand. Fuzzy matching is still used ACROSS RANKING
+# SOURCES, where names are full and well-formed and the risk is low.
+#
+# Keys are matched against the normalized name (lowercase, punctuation and
+# suffixes stripped). Values are the canonical full name.
+# ---------------------------------------------------------------------------
+
+players:
+  # --- 2023: last-name-only ---
+  carr: Derek Carr
+  hopkins: DeAndre Hopkins
+  deebo: Deebo Samuel Sr.
+  lockett: Tyler Lockett
+  pittman: Michael Pittman Jr.
+  pierce: Dameon Pierce
+  akers: Cam Akers
+  waller: Darren Waller
+  swift: D'Andre Swift
+  pickens: George Pickens
+  sutton: Courtland Sutton
+  pat: Pat Freiermuth
+  juju: JuJu Smith-Schuster
+  bateman: Rashod Bateman
+  lazard: Allen Lazard
+  perine: Samaje Perine
+  stafford: Matthew Stafford
+  mingo: Jonathan Mingo
+  mckinnon: Jerick McKinnon
+  burks: Treylon Burks
+  thielen: Adam Thielen
+  njoku: David Njoku
+  achane: De'Von Achane
+  nico: Nico Collins
+  odell: Odell Beckham Jr.
+  allgeier: Tyler Allgeier
+  okonkwo: Chig Okonkwo
+  breida: Matt Breida
+  doubs: Romeo Doubs
+  elliot: Ezekiel Elliott
+
+  # --- 2023: truncated / partial ---
+  brian rob: Brian Robinson Jr.
+  jaxon smith: Jaxon Smith-Njigba
+  kenneth walker: Kenneth Walker III
+
+  # --- 2023: misspellings ---
+  jamaal willaims: Jamaal Williams
+  chrisitan kirk: Christian Kirk
+  kyle pits: Kyle Pitts
+  quiten johnson: Quentin Johnston
+  ryan tannehil: Ryan Tannehill
+  tank bigsy: Tank Bigsby
+  charbonet: Zach Charbonnet
+  garapollo: Jimmy Garoppolo
+  marvin mims: Marvin Mims Jr.
+  hollywood brown: Marquise Brown
+
+  # --- 2024: mangled cell "Justin HerbertLAC(5)Q" ---
+  justin herbertlac5q: Justin Herbert
+
+# Position corrections, applied after name resolution.
+# The history sheets carry some wrong position tags.
+position_fixes:
+  Tyler Boyd: WR          # tagged TE in 2023
+  Jason Myers: K          # tagged WR in 2023
+
+# Entries that cannot be resolved with confidence. Left unmatched on purpose
+# and reported in out/diagnostics.json rather than guessed at.
+unresolved:
+  - myers               # 2023 R15 "Myers (WR)" — most likely Jason Myers (K),
+                        # but a K in a league that drafts none is suspect.
+
+# Team defenses. The history uses city, nickname, and lowercase forms
+# interchangeably ("San Fran", "eagles", "Bills", "Washington").
+dst:
+  san fran: SF
+  san francisco 49ers: SF
+  dallas: DAL
+  dallas cowboys: DAL
+  eagles: PHI
+  philadelphia eagles: PHI
+  bills: BUF
+  buffalo bills: BUF
+  patriots: NE
+  washington: WAS
+  denver: DEN
+  denver broncos: DEN
+  miami: MIA
+  jets: NYJ
+  new york jets: NYJ
+  baltimore ravens: BAL
+  cincinnati bengals: CIN
+  chicago bears: CHI
+  cleveland browns: CLE
+  kansas city chiefs: KC
+  minnesota vikings: MIN
+  arizona cardinals: ARI
+  pittsburgh steelers: PIT

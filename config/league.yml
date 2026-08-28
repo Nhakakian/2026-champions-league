@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------------------
+# LEAGUE SETTINGS
+# ---------------------------------------------------------------------------
+name: Champions League
+teams: 10
+rounds: 16
+format: superflex        # 2QB / superflex — drives QB value heavily
+scoring: half_ppr
+snake: true
+
+# Draft history workbook. One sheet per year.
+history:
+  file: "Champions League Draft History.xlsx"
+  sheets:
+    "2025": modern       # "Player\n POS - TEAM - BYE"
+    "2024": modern
+    "2023": legacy       # "Player (POS)" + leading round-number column
+
+# ---------------------------------------------------------------------------
+# THIS YEAR'S DRAFT ORDER
+# Seat 1 picks first in round 1. Order reverses every round (snake).
+# Editable live on the Draft page too; the page remembers your edits, and
+# "Reset to config" puts these values back.
+# ---------------------------------------------------------------------------
+draft_order:
+  1: Leor
+  2: Rutta
+  3: Josh
+  4: Aaron Lavi
+  5: Nitz
+  6: Jacob
+  7: Me
+  8: Liran
+  9: Jordy
+  10: Mikey
+
+# Which seat is yours.
+my_seat: 7
+
+# Manager name aliases -> canonical. Applies to the HISTORY sheets only.
+owner_aliases:
+  Aaron: Aaron Lavi
+
+# ---------------------------------------------------------------------------
+# FILES THE PIPELINE NEVER READS
+# Kept in the project for reference, excluded from the portable zip so the
+# bundle stays small enough to actually move around. The 2025 workbook alone
+# is 476 KB -- 92% of the old zip -- and its rankings are stale by design.
+# ---------------------------------------------------------------------------
+reference_only:
+  - "Champions Leage Fantasy Football Ranking 2025.xlsx"
+  - "Sleeper cheatsheet-sleeper-half_ppr-superflex.csv"
+  - "Upper Hand cheatsheet-sleeper-half_ppr-superflex.csv"
+
+# Positions your sources do NOT cover. Surfaced as a warning on the board so
+# it isn't a surprise in round 15.
+uncovered_positions: [DST]
+
+# ---------------------------------------------------------------------------
+# LEAGUE TENDENCY MODEL
+#
+# We have no historical ADP for 2023-2025, so we do NOT compare picks to a
+# market baseline that doesn't exist. Instead we build a "positional slot
+# curve": for each year and position, picks are sorted by overall pick number
+# and indexed (QB1, QB2, ... QBn). Averaged over the 3 years that yields
+# "in this league, QB7 goes around pick 48". Comparing that to where the
+# current market puts QB7 gives the league's positional bias in picks.
+# ---------------------------------------------------------------------------
+tendencies:
+  # Ignore positional slots seen in fewer than this many of the 3 years.
+  min_years_observed: 2
+  # Flag thresholds, in picks of divergence between league curve and market.
+  value_threshold: 8       # league lets this slot fall -> you can wait
+  reach_threshold: 8       # league takes this slot early -> you must move up
+
+# ---------------------------------------------------------------------------
+# FLAG THRESHOLDS
+# ---------------------------------------------------------------------------
+flags:
+  market_value: 15         # cheaper by ADP than the composite ranks him
+  market_reach: 15         # pricier by ADP than the composite ranks him
+  # Disagreement is the weighted spread of log(rank within position). With the
+  # current sources the 95th percentile is ~0.20 and the max ~0.31, so 0.20
+  # flags roughly the most-argued-about 5%. Re-check this if you change sources.
+  volatile: 0.20
+  # Percent of the weighted sources that don't rank a player at all. Above 50
+  # rather than at it: with two sources at 50/50, "one of them omits him" hits
+  # exactly 50 and would flag ~90 players, which is noise. The per-source
+  # columns already show a blank where a source has no opinion.
+  thin_coverage: 60
