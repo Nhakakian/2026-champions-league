@@ -9,9 +9,9 @@
 # The Bye column appears on the board automatically. Teams left blank show
 # "—" rather than a guess.
 #
-# These are deliberately left EMPTY rather than filled from memory: a wrong
-# bye week is worse than a missing one, because you would only find out in
-# week 8 when you have no starting quarterback.
+# Source: FantasyPros_2026_Draft_OP_Rankings.csv (947 players). Bye is read
+# per player and collapsed per team; all 32 teams were internally consistent,
+# with no player disagreeing with a team-mate, so these are not guesses.
 #
 # Sleeper shows these in its draft board BYE column, so they can also be
 # scraped from there while logged in.
@@ -20,35 +20,37 @@
 season: 2026
 
 byes:
-  ARI:
-  ATL:
-  BAL:
-  BUF:
-  CAR:
-  CHI:
-  CIN:
-  CLE:
-  DAL:
-  DEN:
-  DET:
-  GB:
-  HOU:
-  IND:
-  JAX:
-  KC:
-  LAC:
-  LAR:
-  LV:
-  MIA:
-  MIN:
-  NE:
-  NO:
-  NYG:
-  NYJ:
-  PHI:
-  PIT:
-  SEA:
-  SF:
-  TB:
-  TEN:
-  WAS:
+  # Keys are quoted deliberately: unquoted NO is boolean false in YAML 1.1,
+  # which silently dropped New Orleans until a coverage check caught it.
+  "ARI": 14
+  "ATL": 11
+  "BAL": 13
+  "BUF": 7
+  "CAR": 5
+  "CHI": 10
+  "CIN": 6
+  "CLE": 11
+  "DAL": 14
+  "DEN": 10
+  "DET": 6
+  "GB": 11
+  "HOU": 8
+  "IND": 13
+  "JAX": 7
+  "KC": 5
+  "LAC": 7
+  "LAR": 11
+  "LV": 13
+  "MIA": 6
+  "MIN": 6
+  "NE": 11
+  "NO": 8
+  "NYG": 8
+  "NYJ": 13
+  "PHI": 10
+  "PIT": 9
+  "SEA": 11
+  "SF": 8
+  "TB": 10
+  "TEN": 9
+  "WAS": 7

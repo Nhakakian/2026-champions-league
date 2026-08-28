@@ -22,8 +22,8 @@ NOTES AND BYE WEEKS:
   They save instantly and are PER BOARD -- a note on a dynasty player is not
   visible on the redraft board, even for the same player.
 
-  Bye weeks: fill in config/byes.yml (one week per team) and rebuild. Blank
-  teams show "--" rather than a guess.
+  Bye weeks: filled in from FantasyPros (config/byes.yml, all 32 teams).
+  To change a season, edit that file and rebuild.
 
 GUARANTEED-STORAGE MODE (if the red storage warning appears):
   python -m http.server 8777
