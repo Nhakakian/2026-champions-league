@@ -59,11 +59,31 @@ sources:
   #
   # To refresh: drop a newer *fantasycalc* file into data/dynasty/ and rebuild.
   # The newest file matching the glob wins, so the old one needs no cleanup.
+  # Sleeper's own dynasty superflex board, scraped 2026-08-28 from the draft
+  # room for draft 1383259101261225984 (The Regime). This is the list you see
+  # inside Sleeper. Its ranking is not available from any Sleeper API -- the
+  # public and authenticated GraphQL schemas have no ADP or rank field -- so it
+  # was read off the rendered draft board.
+  - id: sleeper
+    label: Sleeper dynasty SF
+    short: Sleep
+    match: "*sleeper_dynasty*"
+    weight: 0.50
+    scope: overall
+    columns:
+      player: Player
+      pos: Pos
+      team: Team
+      rank: Rank
+    polarity: rank
+
+  # Second dynasty opinion. Where the two disagree sharply the board raises a
+  # VOLATILE flag, which is the point of carrying more than one.
   - id: fantasycalc
     label: FantasyCalc dynasty SF
     short: Dyn
     match: "*fantasycalc*"
-    weight: 1.00
+    weight: 0.50
     scope: overall
     columns:
       player: Player
