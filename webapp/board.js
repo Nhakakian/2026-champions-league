@@ -175,20 +175,65 @@ function buildChrome() {
 }
 
 function renderWeights() {
-  const w = normWeights();
   el('weights').innerHTML = state.sources.map((s) => `
-    <div class="wrow">
-      <div class="wtop"><span>${esc(s.label)}</span><span class="wval">${Math.round(w[s.id] * 100)}%</span></div>
-      <input type="range" min="0" max="100" value="${Math.round(s.weight * 100)}" data-src="${esc(s.id)}">
+    <div class="wrow" data-row="${esc(s.id)}">
+      <div class="wtop">
+        <span class="wlabel">${esc(s.label)}</span>
+        <span class="wshare" title="Share of the total once weights are normalised">—</span>
+      </div>
+      <div class="wctl">
+        <input type="range" min="0" max="100" step="1"
+               value="${Math.round(s.weight * 100)}" data-src="${esc(s.id)}">
+        <input type="number" min="0" max="100" step="1" class="wnum"
+               value="${Math.round(s.weight * 100)}" data-src="${esc(s.id)}"
+               aria-label="${esc(s.label)} weight">
+      </div>
       <div class="wfile">${esc(s.dynamic ? 'uploaded this session' : s.file)}</div>
     </div>`).join('');
-  for (const input of el('weights').querySelectorAll('input[type=range]')) {
-    input.addEventListener('input', (e) => {
-      state.sources.find((x) => x.id === e.target.dataset.src).weight = +e.target.value / 100;
-      renderWeights(); recompute(); persist(); render();
-    });
+
+  /* Set the weight without rebuilding the panel. Re-rendering mid-drag
+   * replaces the very element under the pointer, which is what made the
+   * sliders feel like they were fighting back. Only the paired control and
+   * the share labels are touched. */
+  const setWeight = (id, pct, from) => {
+    const v = Math.max(0, Math.min(100, Math.round(+pct || 0)));
+    const src = state.sources.find((x) => x.id === id);
+    if (!src) return;
+    src.weight = v / 100;
+    const row = el('weights').querySelector(`[data-row="${CSS.escape(id)}"]`);
+    for (const other of row.querySelectorAll('input')) {
+      if (other !== from && +other.value !== v) other.value = v;
+    }
+    syncWeightShares();
+    recompute(); persist(); render();
+  };
+
+  for (const input of el('weights').querySelectorAll('input')) {
+    const ev = input.type === 'number' ? 'change' : 'input';
+    input.addEventListener(ev, (e) => setWeight(e.target.dataset.src, e.target.value, e.target));
+    // Typing a number should apply on Enter too, not only on blur.
+    if (input.type === 'number') {
+      input.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+      });
+    }
+  }
+  syncWeightShares();
+}
+
+/* The number you type is the RAW weight; the share is what it becomes once
+ * every source is normalised to sum to 100. Showing both means typing 50
+ * stays 50 while you work, instead of the field rewriting itself. */
+function syncWeightShares() {
+  const w = normWeights();
+  for (const row of el('weights').querySelectorAll('.wrow')) {
+    const id = row.dataset.row;
+    const share = row.querySelector('.wshare');
+    if (share) share.textContent = `${Math.round((w[id] || 0) * 100)}%`;
   }
 }
+
 
 /* ------------------------------------------------------------------ events */
 function wire() {

@@ -719,3 +719,29 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
 /* Empty board caused by zeroed weights is a different problem from an empty
    filter result, and reads as a warning rather than a neutral result. */
 .empty.warn { color: var(--bad, #b4232a); font-weight: 600; }
+
+/* --------------------------------------------------------- source weights
+   Each source shows a typed weight and the share it becomes once all
+   sources are normalised. Two separate numbers on purpose: the field you
+   type into must hold still while you work, which it cannot do if it is
+   also displaying a value that every other source can change. */
+.wctl { display: flex; align-items: center; gap: 8px; }
+.wctl input[type=range] { flex: 1 1 auto; min-width: 0; }
+.wnum {
+  flex: 0 0 auto;
+  width: 4.2rem;
+  font: inherit;
+  font-size: .82rem;
+  text-align: right;
+  padding: 2px 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--text);
+}
+.wnum:focus { border-color: var(--accent); outline: none; }
+.wshare {
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+  font-size: .78rem;
+}
