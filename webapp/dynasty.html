@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Assets are requested with a fresh query every load, same as the other pages. -->
+<script>
+  window.__ASSET_V = Date.now();
+  document.write('<link rel="stylesheet" href="styles.css?v=' + window.__ASSET_V + '">');
+</script>
+<!-- THIS IS A SEPARATE DRAFT.
+     Declaring the namespace before core.js loads is what gives this page its
+     own localStorage bucket (cl-draft-board:dynasty). Picks made on draft.html
+     cannot appear here and picks made here cannot appear there. Do not remove
+     this line, and do not load data.js on this page -- dynasty-data.js is the
+     dynasty player pool. -->
+<script>window.__CL_NAMESPACE = 'dynasty';</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dynasty Startup Draft</title>
+</head>
+<body class="dynasty">
+
+<div class="nsbanner">
+  <strong>Dynasty startup draft</strong>
+  <span>separate from the Champions League redraft &mdash; picks here do not affect that board</span>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <h1 id="leagueName">Dynasty</h1>
+    <nav id="nav" class="nav"></nav>
+  </div>
+  <div class="topbar-right">
+    <label class="inline">You are
+      <select id="seatSelect" title="Which seat in the draft order is yours"></select>
+    </label>
+    <button id="editOrderBtn" class="btn btn-quiet">Edit order</button>
+    <button id="undoBtn" class="btn">Undo</button>
+    <button id="resetBtn" class="btn btn-quiet">Reset</button>
+  </div>
+</header>
+
+<section class="clockbar" id="clockbar">
+  <div class="cb-item"><span>Pick</span><strong id="curPick">&mdash;</strong></div>
+  <div class="cb-item"><span>Round</span><strong id="curRound">&mdash;</strong></div>
+  <div class="cb-item wider"><span>On the clock</span><strong id="onClock">&mdash;</strong></div>
+  <div class="cb-item wide"><span>You pick at</span><strong id="nextPick">&mdash;</strong></div>
+  <div class="cb-item"><span>Picks away</span><strong id="untilYou">&mdash;</strong></div>
+  <div class="cb-spacer"></div>
+  <div class="cb-item"><span>Your team</span><strong id="myCount">0</strong></div>
+</section>
+
+<div id="noRankings" class="panel emptystate" hidden>
+  <h2>No dynasty rankings loaded yet</h2>
+  <p>
+    The draft board below works right now &mdash; you can record picks, edit the
+    order and track rosters. There is just no player pool to search until you
+    add dynasty rankings.
+  </p>
+  <p class="hint">
+    Drop a <code>.csv</code> or <code>.xlsx</code> into <code>data/dynasty/</code>
+    &mdash; <strong>not</strong> <code>data/sources/</code>, which feeds the redraft
+    board &mdash; then run <code>python3 -m pipeline.build</code>. The build registers
+    the file in <code>config/dynasty.yml</code> at weight 0; set its weight and re-run.
+  </p>
+  <p class="hint">
+    Redraft rankings are deliberately not used here: they rank a 30-year-old
+    above a rookie, which is backwards for dynasty.
+  </p>
+</div>
+
+<section class="panel boardgrid-panel">
+  <div class="panel-head">
+    <h2>Draft board</h2>
+    <span class="muted">your column is highlighted &middot; click any pick to move or remove it</span>
+  </div>
+  <div class="gridwrap"><table id="boardGrid" class="dgrid"></table></div>
+</section>
+
+<div id="orderEditor" class="panel ordered" hidden>
+  <div class="panel-head">
+    <h2>Draft order</h2>
+    <span class="muted">seat 1 picks first &middot; order reverses each round</span>
+  </div>
+  <div id="orderRows" class="orderrows"></div>
+  <div class="orderbtns">
+    <button id="orderSave" class="btn">Done</button>
+    <button id="orderReset" class="btn btn-quiet">Reset to config</button>
+  </div>
+</div>
+
+<main class="draft-main">
+  <div class="col-main">
+
+    <section class="panel record">
+      <div class="panel-head">
+        <h2>Record a pick</h2>
+        <span class="muted">assigning to <strong id="assignTo">&mdash;</strong></span>
+      </div>
+      <p class="hint">
+        The big button assigns to whoever is on the clock. Use the dropdown to give
+        him to someone else, or fix it afterwards in the draft board below.
+      </p>
+      <input id="search" type="search" autocomplete="off"
+             placeholder="Type a player name…   ( / to focus · Enter assigns to whoever is on the clock )">
+      <div id="results" class="results"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Best available</h2>
+        <div class="segmented sm" id="bestPos">
+          <button data-pos="ALL" class="on">All</button>
+          <button data-pos="QB">QB</button>
+          <button data-pos="RB">RB</button>
+          <button data-pos="WR">WR</button>
+          <button data-pos="TE">TE</button>
+          <button data-pos="FLEX" title="RB, WR and TE — no quarterbacks">Flex</button>
+          <button data-pos="WATCH">&#9733;</button>
+        </div>
+      </div>
+      <div id="best" class="results"></div>
+    </section>
+
+  </div>
+
+  <aside class="col-side">
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Your team</h2>
+        <span class="muted" id="myMeta"></span>
+      </div>
+      <div id="roster" class="roster"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Watch list</h2>
+        <span class="muted" id="watchMeta"></span>
+      </div>
+      <div id="watch" class="watchlist"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Tier scarcity</h2>
+      <p class="hint">Players left in each live tier. A tier about to empty is the
+        real signal to reach.</p>
+      <div id="scarcity" class="scarcity"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Recent picks</h2>
+        <span class="muted">change the team to fix a mistake</span>
+      </div>
+      <div id="log" class="picklog"></div>
+    </section>
+
+  </aside>
+</main>
+
+<!-- dynasty-data.js sets window.BOARD_DATA to the DYNASTY pool. data.js (the
+     redraft pool) is deliberately never loaded here. draft.js is reused as-is:
+     with the namespace set above it reads and writes dynasty storage only. -->
+<script>
+  for (const src of ['dynasty-data.js', 'core.js', 'draft.js']) {
+    document.write('<scr' + 'ipt src="' + src + '?v=' + window.__ASSET_V + '"></scr' + 'ipt>');
+  }
+</script>
+<script>
+  // The redraft-only panels are absent from this page's markup; draft.js
+  // already guards on element presence. Surface the empty-pool state instead.
+  window.addEventListener('load', function () {
+    var n = document.getElementById('noRankings');
+    if (n && (window.BOARD_DATA?.players || []).length === 0) n.hidden = false;
+  });
+</script>
+</body>
+</html>

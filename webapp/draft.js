@@ -243,6 +243,7 @@ function renderRoster() {
 
 /* ----------------------------------------------------------------- needs */
 function renderNeeds(mine) {
+  if (!el('needs')) return;   // panel omitted (dynasty page has no history)
   const round = Math.max(1, Math.min(rounds(), roundOfPick(state.picks.length)));
   const pace = paceAt(round);
   if (!pace) { el('needs').innerHTML = '<p class="muted">No history loaded.</p>'; return; }
@@ -271,6 +272,7 @@ function renderNeeds(mine) {
 
 /* ------------------------------------------------- gone before next pick */
 function renderGone(clock) {
+  if (!el('gone')) return;    // panel omitted (dynasty page has no market ADP)
   if (clock.next == null) {
     el('gone').innerHTML = '<p class="muted">Set which seat is yours to see this.</p>';
     el('goneHint').textContent = '';

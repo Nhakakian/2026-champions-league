@@ -603,3 +603,37 @@ tbody tr.mypick td:first-child { padding-left: 9px; }
 .posname { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .posteam { font-size: 10px; color: var(--dim); text-align: right; }
 .notpool { color: var(--line); text-align: center; font-size: 12px; cursor: default; }
+
+/* ---------------------------------------------------------------- dynasty
+   The dynasty startup draft is a different draft entirely. Everything below
+   is scoped to body.dynasty so it cannot touch the redraft pages. The point
+   of the colour shift is that you can never be one glance away from
+   recording a pick on the wrong board. */
+body.dynasty {
+  --accent: #7c3aed;
+  --accent-soft: #ede9fe;
+}
+body.dynasty .nsbanner {
+  display: flex;
+  gap: .6rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: .5rem .9rem;
+  background: #7c3aed;
+  color: #fff;
+  font-size: .82rem;
+  letter-spacing: .01em;
+}
+body.dynasty .nsbanner strong { font-weight: 700; }
+body.dynasty .nsbanner span { opacity: .85; }
+body.dynasty .topbar { border-top: 3px solid #7c3aed; }
+body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
+
+.emptystate { margin: 1rem; border-left: 3px solid #7c3aed; }
+.emptystate h2 { margin-top: 0; }
+.emptystate code {
+  background: var(--accent-soft, #eee);
+  padding: .1em .35em;
+  border-radius: 3px;
+  font-size: .92em;
+}

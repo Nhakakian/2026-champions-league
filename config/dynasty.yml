@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# DYNASTY STARTUP DRAFT
+#
+# This is a SEPARATE DRAFT from the Champions League redraft. It shares no
+# rankings, no picks, and no storage with it. Drafting a player on the Draft
+# page has no effect here, and vice versa. That separation is deliberate --
+# see webapp/core.js (KEY / __CL_NAMESPACE) for how it is enforced.
+#
+# RANKINGS: drop dynasty ranking files into  data/dynasty/  -- NOT into
+# data/sources/, which feeds the redraft board. Then run:
+#     python -m pipeline.build
+# A new file is auto-registered below at weight 0.0; set its weight and re-run.
+# ---------------------------------------------------------------------------
+
+enabled: true
+
+league:
+  name: Dynasty Startup
+  teams: 12
+  rounds: 25            # startup dynasty rosters are deep
+  format: superflex
+  scoring: half_ppr
+  snake: true
+
+# Seat 1 picks first in round 1; order reverses each round. You can edit this
+# live on the page -- it remembers your edits independently of the redraft.
+draft_order:
+  1: Team 1
+  2: Team 2
+  3: Team 3
+  4: Team 4
+  5: Team 5
+  6: Team 6
+  7: Team 7
+  8: Team 8
+  9: Team 9
+  10: Team 10
+  11: Team 11
+  12: Team 12
+
+my_seat: 1
+
+# ---------------------------------------------------------------------------
+# DYNASTY RANKING SOURCES
+#
+# Empty until you drop a file into data/dynasty/. The page works without them
+# (it just has no player pool yet) and says so plainly rather than showing a
+# redraft list that would be wrong for dynasty.
+#
+# Redraft rankings are NOT used here on purpose: they rank a 30-year-old above
+# a rookie, which is backwards for dynasty.
+# ---------------------------------------------------------------------------
+sources: []
+
+composite:
+  method: log_rank
+  missing_penalty: 0.35
+
+tiers:
+  gap_z_threshold: 1.0
+  min_tier_size: 2
+  max_tier_size: 12
+  positions: [QB, RB, WR, TE]

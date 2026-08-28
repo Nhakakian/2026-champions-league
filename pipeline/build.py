@@ -20,7 +20,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from . import composite, history, league, match, positional, sources, tiers
+from . import dynasty as dynasty_mod, composite, history, league, match, positional, sources, tiers
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "config"
@@ -379,6 +379,28 @@ def main() -> int:
         "window.BOARD_DATA = " + json.dumps(payload, separators=(",", ":")) + ";\n",
         encoding="utf-8",
     )
+
+    # ------------------------------------------------------------- dynasty
+    # A completely separate draft: its own config, its own drop zone, its own
+    # data file, its own browser storage. Built here only so one command
+    # rebuilds everything; nothing above this line reads dynasty data.
+    dyn_cfg = _load_yaml("dynasty.yml")
+    if dyn_cfg.get("enabled", True):
+        dyn_payload, dyn_notes = dynasty_mod.build(
+            dyn_cfg, ROOT / "data" / "dynasty", CONFIG,
+            alias_cfg.get("players", {}),
+        )
+        (OUT / "dynasty.json").write_text(
+            json.dumps(dyn_payload, indent=1), encoding="utf-8")
+        (web / "dynasty-data.js").write_text(
+            "window.BOARD_DATA = " + json.dumps(dyn_payload, separators=(",", ":")) + ";\n",
+            encoding="utf-8",
+        )
+        diagnostics["dynasty"] = {
+            "players": len(dyn_payload["players"]),
+            "sources": [d["id"] for d in dyn_payload["sources"]],
+            "notes": dyn_notes,
+        }
 
     print(f"\nplayers: {len(players)}   sources: " +
           ", ".join(f"{s.id}={weights[s.id]:.0%}" for s in loaded))

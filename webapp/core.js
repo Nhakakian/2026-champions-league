@@ -58,7 +58,7 @@ const tierColor = (t) => t ? PALETTE[(t - 1) % PALETTE.length] : 'var(--line)';
 async function loadData() {
   let data = window.BOARD_DATA;
   if (!data) {
-    try { data = await (await fetch('../out/board.json')).json(); }
+    try { data = await (await fetch(NS ? `../out/${NS}.json` : '../out/board.json')).json(); }
     catch (err) {
       document.body.innerHTML =
         '<p style="padding:24px">Could not load board data. Run ' +
@@ -514,7 +514,13 @@ function resetDraft() {
 function syncDrafted() { state.drafted = new Set(state.picks.map((p) => p.id)); }
 
 /* ------------------------------------------------------------ persistence */
-const KEY = 'cl-draft-board';
+/* Each draft gets its own storage namespace. A page declares one by setting
+ * window.__CL_NAMESPACE before core.js loads (see dynasty.html). Pages that
+ * declare none keep the original key, so saved redraft drafts survive.
+ * This is what keeps the dynasty draft and the redraft draft from ever
+ * seeing each other's picks. */
+const NS = (typeof window !== 'undefined' && window.__CL_NAMESPACE) || null;
+const KEY = NS ? `cl-draft-board:${NS}` : 'cl-draft-board';
 function persist() {
   try {
     localStorage.setItem(KEY, JSON.stringify({
@@ -550,12 +556,17 @@ function restore() {
 /* -------------------------------------------------------------------- nav */
 function renderNav() {
   const here = location.pathname.split('/').pop() || 'index.html';
-  const pages = [
-    ['index.html', 'Board'],
-    ['draft.html', 'Draft'],
-    ['positional.html', 'Positional'],
-    ['history.html', 'History'],
-  ];
+  /* The dynasty draft is a separate universe: its own pages, its own storage,
+   * its own rankings. The only thing crossing the line is a plain link, and it
+   * is labelled so you always know which draft you are looking at. */
+  const pages = NS === 'dynasty'
+    ? [['dynasty.html', 'Dynasty Board'],
+       ['index.html', '\u2190 Redraft']]
+    : [['index.html', 'Board'],
+       ['draft.html', 'Draft'],
+       ['positional.html', 'Positional'],
+       ['history.html', 'History'],
+       ['dynasty.html', 'Dynasty \u2197']];
   const nav = el('nav');
   if (nav) {
     nav.innerHTML = pages.map(([href, label]) =>

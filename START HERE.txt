@@ -10,6 +10,13 @@ UPDATE THE RANKINGS (needs Python 3):
   3. python -m pipeline.build
   4. Reopen webapp/index.html
 
+DYNASTY STARTUP DRAFT (separate draft, separate everything):
+  Open webapp/dynasty.html
+
+  Its rankings go in  data/dynasty/  -- NOT data/sources/. Putting a dynasty
+  list in data/sources/ would corrupt the Champions League redraft rankings.
+  Picks in one draft never affect the other.
+
 GUARANTEED-STORAGE MODE (if the red storage warning appears):
   python -m http.server 8777
   then open http://localhost:8777/webapp/index.html
