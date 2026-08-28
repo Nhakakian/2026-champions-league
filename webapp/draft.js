@@ -34,7 +34,7 @@ function playerRow(p) {
       <span class="badge" style="--tier-c:${tierColor(p.tier)}"
             title="Tier ${p.tier ?? '—'}">${p.tier ?? '—'}</span>
       <span class="pos pos-${p.pos}">${p.pos || ''}</span>
-      <span class="pname">${esc(p.player)}</span>
+      <span class="pnamewrap"><span class="pname">${esc(p.player)}</span>${note ? `<span class="pnote" data-act="note" title="${esc(note)}">${esc(note)}</span>` : `<button class="noteadd" data-act="note" title="Add a note">+</button>`}</span>
       <span class="pmeta">${esc(p.team || '')}${p.bye ? ` · bye ${p.bye}` : ''} · #${p.compositeRank}
         ${p.adp == null ? '' : `· ADP ${trim(p.adp)}`}</span>
       <span class="pflags">${p.flags.slice(0, 2).map((f) =>
@@ -44,8 +44,6 @@ function playerRow(p) {
       <select class="seatpick" data-act="takeseat" title="Assign to someone else">
         <option value="">to…</option>${seatOptions(null)}
       </select>
-      <span class="pnote${note ? ' has' : ''}" data-act="note"
-            title="${note ? esc(note) : 'Add a note'}">${note ? esc(note) : '+ note'}</span>
     </div>`;
 }
 

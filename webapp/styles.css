@@ -673,21 +673,46 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
   border: 1px solid var(--accent);
   border-radius: 4px;
 }
-/* On the draft page the note sits on its own line under the player row. */
+/* Draft/dynasty row: the note shares the name's grid cell, so it never adds
+   a second line. Row height must not grow during a live draft -- scrolling
+   with the pick clock running is the thing this page exists to avoid. */
+.pnamewrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;                 /* lets both children ellipsize */
+}
+/* The name must never be sacrificed for the note. A shrink factor of 200
+   against the name's 1 means the note absorbs essentially all the squeeze
+   and ellipsizes first; the name only gives way once the note is gone. */
+.pnamewrap .pname { flex: 0 1 auto; flex-shrink: 1; }
 .pnote {
-  grid-column: 1 / -1;
-  font-size: .78rem;
-  color: var(--muted);
-  padding: .1rem 0 .1rem 2.2rem;
+  flex: 0 1 auto;
+  flex-shrink: 200;
+  max-width: 40%;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--accent);
+  cursor: text;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Note affordance on a draft/dynasty player row. */
-.pnote {
-  cursor: text;
-  border-radius: 3px;
+.pnote::before { content: '· '; color: var(--dim); }
+/* The add button occupies no row of its own and stays invisible until you
+   hover the row, so an un-noted player costs nothing at all. */
+.noteadd {
+  flex: 0 0 auto;
+  background: none;
+  border: 0;
+  padding: 0 3px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--dim);
+  cursor: pointer;
+  visibility: hidden;
 }
-.pnote:not(.has) { opacity: .45; }
-.pnote:hover { color: var(--accent); opacity: 1; }
-.pnote.has { color: var(--fg); }
+.prow:hover .noteadd { visibility: visible; }
+.noteadd:hover { color: var(--accent); }
+.prow .noteinput { font-size: 11px; padding: 1px 4px; }
