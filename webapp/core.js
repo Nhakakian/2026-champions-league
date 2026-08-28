@@ -607,13 +607,14 @@ function renderNav() {
    * its own rankings. The only thing crossing the line is a plain link, and it
    * is labelled so you always know which draft you are looking at. */
   const pages = NS === 'dynasty'
-    ? [['dynasty.html', 'Dynasty Board'],
+    ? [['dynasty-board.html', 'Board'],
+       ['dynasty.html', 'Draft'],
        ['index.html', '\u2190 Redraft']]
     : [['index.html', 'Board'],
        ['draft.html', 'Draft'],
        ['positional.html', 'Positional'],
        ['history.html', 'History'],
-       ['dynasty.html', 'Dynasty \u2197']];
+       ['dynasty-board.html', 'Dynasty \u2197']];
   const nav = el('nav');
   if (nav) {
     nav.innerHTML = pages.map(([href, label]) =>

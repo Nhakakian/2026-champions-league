@@ -28,11 +28,18 @@ function columns() {
              `${s.weight > 0 ? '' : '  (weight 0 — shown but not counted)'}`,
     });
   }
-  cols.push({ key: 'adpDelta', label: 'vs ADP', cls: 'num',
-    title: 'ADP rank minus composite rank. Positive = cheaper than we rank him.' });
-  cols.push({ key: 'leagueDelta', label: 'League', cls: 'num',
-    title: "Market pick minus this league's historical pick for the positional slot. " +
-           'Negative = this league lets the slot fall to you.' });
+  // Both of these are derived from data a startup league does not have: a
+  // market ADP source, and years of its own draft history. Showing a column
+  // that can only ever read "—" is noise, so omit them when absent.
+  if (state.data.adpSourceId) {
+    cols.push({ key: 'adpDelta', label: 'vs ADP', cls: 'num',
+      title: 'ADP rank minus composite rank. Positive = cheaper than we rank him.' });
+  }
+  if (state.curve.size) {
+    cols.push({ key: 'leagueDelta', label: 'League', cls: 'num',
+      title: "Market pick minus this league's historical pick for the positional slot. " +
+             'Negative = this league lets the slot fall to you.' });
+  }
   cols.push({ key: 'flags', label: 'Flags', sortable: false });
   cols.push({ key: 'note', label: 'Note', sortable: false, cls: 'notecol',
     title: 'Your own note. Click to edit. Notes are per board — dynasty '
@@ -131,7 +138,17 @@ function render() {
     return `<tr data-id="${esc(p.id)}" class="${cl}">${cells}</tr>`;
   }).join('');
 
-  el('empty').hidden = rows.length > 0;
+  // Every source at weight 0 leaves nothing to rank by, which empties the
+  // board. Saying "no players match these filters" there is actively
+  // misleading -- the filters are fine, the weights are not.
+  const noWeight = state.sources.every((x) => !(x.weight > 0));
+  const empty = el('empty');
+  empty.textContent = noWeight
+    ? 'Every source is at weight 0, so there is nothing to rank by. '
+      + 'Raise a slider, or press "Reset to config".'
+    : 'No players match these filters.';
+  empty.classList.toggle('warn', noWeight);
+  empty.hidden = rows.length > 0;
   renderLog();
 }
 

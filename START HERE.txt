@@ -11,7 +11,8 @@ UPDATE THE RANKINGS (needs Python 3):
   4. Reopen webapp/index.html
 
 DYNASTY STARTUP DRAFT (separate draft, separate everything):
-  Open webapp/dynasty.html
+  Board  webapp/dynasty-board.html   rankings, weights, filters
+  Draft  webapp/dynasty.html         record picks on draft night
 
   Its rankings go in  data/dynasty/  -- NOT data/sources/. Putting a dynasty
   list in data/sources/ would corrupt the Champions League redraft rankings.

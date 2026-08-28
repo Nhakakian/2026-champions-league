@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Assets are requested with a fresh query every load. This page's markup never
+     changes between builds, so a cached copy of it is harmless -- which is the
+     point: a stale HTML file can't pin you to last build's code or data. -->
+<script>
+  window.__ASSET_V = Date.now();
+  document.write('<link rel="stylesheet" href="styles.css?v=' + window.__ASSET_V + '">');
+</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Separate draft: see dynasty.html for why this line matters. -->
+<script>window.__CL_NAMESPACE = 'dynasty';</script>
+<title>Dynasty Board</title>
+</head>
+<body class="dynasty">
+
+<div class="nsbanner">
+  <strong>Dynasty startup draft</strong>
+  <span>separate from the Champions League redraft &mdash; picks and notes here do not affect that board</span>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <h1 id="leagueName">Dynasty</h1>
+    <nav id="nav" class="nav"></nav>
+  </div>
+  <div class="topbar-right">
+    <div class="counter"><strong id="availCount">0</strong><span>available</span></div>
+    <div class="counter"><strong id="draftedCount">0</strong><span>drafted</span></div>
+    <button id="undoBtn" class="btn" title="Undo last pick (Ctrl+Z)">Undo</button>
+    <button id="resetBtn" class="btn btn-quiet">Reset draft</button>
+  </div>
+</header>
+
+<section class="controls">
+  <div class="ctl-row">
+    <input id="search" type="search" placeholder="Search player…   ( / to focus · Enter drafts top hit )" autocomplete="off">
+    <div class="segmented" id="posFilter">
+      <button data-pos="ALL" class="on">All</button>
+      <button data-pos="QB">QB</button>
+      <button data-pos="RB">RB</button>
+      <button data-pos="WR">WR</button>
+      <button data-pos="TE">TE</button>
+      <button data-pos="FLEX" title="RB, WR and TE — no quarterbacks">Flex</button>
+    </div>
+    <label class="inline">Tier ≤
+      <select id="tierFilter"><option value="">any</option></select>
+    </label>
+    <label class="inline checkbox">
+      <input type="checkbox" id="showDrafted" checked> show drafted
+    </label>
+  </div>
+
+  <div class="ctl-row">
+    <span class="label">Flags</span>
+    <div class="chips" id="flagFilter"></div>
+    <button id="clearFilters" class="btn btn-quiet">Clear filters</button>
+    <span class="legend">click a row = drafted · <strong>shift+click = drafted by me</strong> · ★ = watch list</span>
+  </div>
+</section>
+
+<main>
+  <div class="table-wrap">
+    <table id="board">
+      <thead><tr id="headRow"></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p id="empty" class="empty" hidden>No players match these filters.</p>
+  </div>
+
+  <aside class="side">
+    <section class="panel">
+      <h2>Source weights</h2>
+      <p class="hint">Re-ranks and re-tiers live. Does not change any file.</p>
+      <div id="weights"></div>
+      <button id="resetWeights" class="btn btn-quiet full">Reset to config</button>
+    </section>
+
+    <section class="panel">
+      <h2>Add / replace a source</h2>
+      <p class="hint">
+        Session-only quick swap for updated rankings. For a permanent change,
+        drop the file in <code>data/dynasty/</code> and re-run
+        <code>python -m pipeline.build</code>.
+      </p>
+      <label class="filedrop" id="filedrop">
+        <input type="file" id="fileInput" accept=".csv" hidden>
+        <span>Choose a CSV…</span>
+      </label>
+      <div id="fileConfig" hidden>
+        <label class="inline full">Apply to
+          <select id="srcTarget"></select>
+        </label>
+        <label class="inline full" id="srcNameRow">Name <input id="srcName" type="text"></label>
+        <label class="inline full">Rank column
+          <select id="srcColumn"></select>
+        </label>
+        <button id="srcApply" class="btn full">Apply</button>
+        <button id="srcCancel" class="btn btn-quiet full">Cancel</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Recent picks</h2>
+      <ol id="log" class="log"></ol>
+    </section>
+  </aside>
+</main>
+
+<script>
+  for (const src of ['dynasty-data.js', 'core.js', 'board.js']) {
+    document.write('<scr' + 'ipt src="' + src + '?v=' + window.__ASSET_V + '"></scr' + 'ipt>');
+  }
+</script>
+</body>
+</html>

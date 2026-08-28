@@ -716,3 +716,6 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
 .prow:hover .noteadd { visibility: visible; }
 .noteadd:hover { color: var(--accent); }
 .prow .noteinput { font-size: 11px; padding: 1px 4px; }
+/* Empty board caused by zeroed weights is a different problem from an empty
+   filter result, and reads as a warning rather than a neutral result. */
+.empty.warn { color: var(--bad, #b4232a); font-weight: 600; }

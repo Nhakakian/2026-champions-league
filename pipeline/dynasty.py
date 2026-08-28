@@ -132,7 +132,10 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
         source_meta = [
             {"id": s.id, "label": s.label, "weight": weights.get(s.id, 0.0),
              "scope": next((sp.get("scope", "overall") for sp in specs if sp["id"] == s.id), "overall"),
-             "role": None, "short": getattr(s, "short", None) or s.id,
+             "role": None,
+             # LoadedSource carries no short label; it lives on the spec.
+             "short": next((sp.get("short") for sp in specs
+                            if sp["id"] == s.id and sp.get("short")), s.id),
              "column": s.rank_column, "file": s.path.name, "players": int(len(s.frame))}
             for s in loaded
         ]
