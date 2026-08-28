@@ -64,11 +64,52 @@ sources:
   # inside Sleeper. Its ranking is not available from any Sleeper API -- the
   # public and authenticated GraphQL schemas have no ADP or rank field -- so it
   # was read off the rendered draft board.
+  # Faraz's dynasty superflex list, 341 players. Given the lead weight because
+  # he is the ranker you trust most on the redraft board too. He is distinctly
+  # WR-heavy and RB/TE-light -- 23 WRs in his top 50 against 18 for the other
+  # two -- so the other sources are kept on to catch his outliers rather than
+  # to outvote him. Median disagreement with them is 18 ranks over 308 shared
+  # players; the extremes are all past rank 150, where nobody has conviction.
+  #
+  # scope: overall -- his list ranks across positions, so it votes on
+  # QB-vs-WR value. (Contrast Joel on the redraft board, who is positional.)
+  - id: faraz
+    label: Faraz dynasty SF
+    short: Faraz
+    match: "*faraz_dynasty*"
+    weight: 0.50
+    scope: overall
+    columns:
+      player: name
+      pos: pos
+      team: team
+      rank: rank
+    polarity: rank
+
+  # MARKET BASELINE — weight 0, so it never moves the rankings. Split out of
+  # Faraz's adp column (255 of his 341 players carry one). Its only job is to
+  # give the dynasty board a market to measure against, which is what powers
+  # the "vs ADP" column and the MARKET VALUE / MARKET REACH flags. The redraft
+  # board has had this from Sleeper ADP all along; dynasty had nothing.
+  - id: adp
+    label: Dynasty ADP (market reference)
+    short: ADP
+    match: "*market_adp_dynasty*"
+    weight: 0.00
+    role: market
+    scope: overall
+    columns:
+      player: Player
+      pos: Pos
+      team: Team
+      rank: ADP
+    polarity: rank
+
   - id: sleeper
     label: Sleeper dynasty SF
     short: Sleep
     match: "*sleeper_dynasty*"
-    weight: 0.50
+    weight: 0.30
     scope: overall
     columns:
       player: Player
@@ -83,7 +124,7 @@ sources:
     label: FantasyCalc dynasty SF
     short: Dyn
     match: "*fantasycalc*"
-    weight: 0.50
+    weight: 0.20
     scope: overall
     columns:
       player: Player
@@ -96,6 +137,20 @@ sources:
 composite:
   method: log_rank
   missing_penalty: 0.35
+
+# ---------------------------------------------------------------------------
+# FLAG THRESHOLDS
+# Same shape as the redraft board's. There is no league-history model here --
+# this league has never drafted -- so only the market and spread flags apply.
+# ---------------------------------------------------------------------------
+flags:
+  # Cheaper / pricier by dynasty ADP than the composite ranks him, in ranks.
+  market_value: 15
+  market_reach: 15
+  # Weighted spread of log(rank within position) across the three rankers.
+  volatile: 0.20
+  # Percent of weighted sources that do not rank him at all.
+  thin_coverage: 60
 
 tiers:
   gap_z_threshold: 1.0

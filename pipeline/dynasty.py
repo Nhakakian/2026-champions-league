@@ -82,6 +82,7 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
 
     players: list[dict] = []
     source_meta: list[dict] = []
+    market_id = next((sp["id"] for sp in specs if sp.get("role") == "market"), None)
 
     weights = composite.normalized_weights(
         [{"id": s.id, "weight": s.weight} for s in loaded]
@@ -132,8 +133,8 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
         source_meta = [
             {"id": s.id, "label": s.label, "weight": weights.get(s.id, 0.0),
              "scope": next((sp.get("scope", "overall") for sp in specs if sp["id"] == s.id), "overall"),
-             "role": None,
-             # LoadedSource carries no short label; it lives on the spec.
+             # role and short live on the spec, not on LoadedSource.
+             "role": next((sp.get("role") for sp in specs if sp["id"] == s.id), None),
              "short": next((sp.get("short") for sp in specs
                             if sp["id"] == s.id and sp.get("short")), s.id),
              "column": s.rank_column, "file": s.path.name, "players": int(len(s.frame))}
@@ -168,9 +169,15 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
         "compositeConfig": {
             "missingPenalty": float((cfg.get("composite") or {}).get("missing_penalty", 0.35)),
         },
-        "adpSourceId": None,
+        "adpSourceId": market_id,
         "positional": {},
-        "flagThresholds": {},
+        "flagThresholds": {
+            "leagueValue": 0, "leagueReach": 0,   # no history model here
+            "marketValue": float((cfg.get("flags") or {}).get("market_value", 15)),
+            "marketReach": float((cfg.get("flags") or {}).get("market_reach", 15)),
+            "volatile": float((cfg.get("flags") or {}).get("volatile", 0.20)),
+            "thinCoverage": float((cfg.get("flags") or {}).get("thin_coverage", 60)),
+        },
         "players": players,
         # No history: this league has never drafted before. The redraft board's
         # tendency model is built on 3 years of real picks; inventing an
