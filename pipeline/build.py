@@ -352,7 +352,8 @@ def main() -> int:
         # Per-source positional boards. Independent of the composite by design:
         # nothing here is weighted or blended across sources.
         "positional": positional.build(
-            loaded, specs, {p["id"]: p for p in players}
+            loaded, specs, {p["id"]: p for p in players},
+            pos_dir=DROP_ZONE / "positional",
         ),
         # Mirrored by webapp/app.js so live weight changes reproduce the flags
         # a rebuild at those weights would produce.

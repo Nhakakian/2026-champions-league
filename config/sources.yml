@@ -21,6 +21,12 @@ sources:
     label: Faraz (Upper Hand)
     short: Faraz          # column header on the draft board
     match: "*faraz*"
+    # His own per-position board, published as a separate cheatsheet rather
+    # than a second sheet. Lives in data/sources/positional/, which the drop
+    # zone scanner deliberately does not look in -- so it is never mistaken
+    # for a ranking source. Gives the Positional page his real tier breaks
+    # instead of ones derived from gaps in his overall list.
+    positional_file: "*faraz*"
     weight: 0.50
     # 'overall'    = ranks players ACROSS positions; sets cross-position value.
     # 'positional' = only trusted for order WITHIN a position. Use this for a

@@ -21,13 +21,23 @@ import numpy as np
 import pandas as pd
 
 from .normalize import name_key
+from .sources import claim, discover
 from .tiers import _local_thresholds
 
 TIER_LABEL = re.compile(r"^\s*T?(\d+)\s*$", re.I)
 
 
 def _parse_tier(value: object) -> int | None:
-    m = TIER_LABEL.match(str(value))
+    """Tier from "3", "T3" or a float. A column with any blank cell is read
+    by pandas as float, so a plain tier arrives as 3.0 and must not be lost
+    to a regex that only accepts digits."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        if isinstance(value, float) and (value != value):     # NaN
+            return None
+        return int(value)
+    m = TIER_LABEL.match(str(value).strip())
     return int(m.group(1)) if m else None
 
 
@@ -116,8 +126,55 @@ def derive(frame: pd.DataFrame, positions: tuple[str, ...],
     return out
 
 
+def from_positional_file(path, positions: tuple[str, ...]) -> list[dict]:
+    """Read a ranker's own positional board from a separate file.
+
+    Layout is one row per player with a Pos column and a Rank that restarts
+    at 1 within each position -- positions simply stacked one after another.
+    Unlike a tier sheet there is nothing to detect: the Pos column says which
+    board each row belongs to.
+
+    A blank Tier is kept as None rather than guessed. These files also carry
+    players the ranker places positionally but leaves off his overall list;
+    those are kept, and the caller flags them as not in the pool.
+    """
+    raw = pd.read_csv(path, encoding="utf-8-sig")
+    cols = {str(c).strip().lower(): c for c in raw.columns}
+    need = [cols.get(k) for k in ("pos", "player", "rank")]
+    if not all(need):
+        return []
+    pos_c, player_c, rank_c = need
+    tier_c = cols.get("tier")
+
+    out: list[dict] = []
+    for _, row in raw.iterrows():
+        pos = str(row[pos_c]).strip().upper()
+        if pos not in positions:
+            continue
+        player = str(row[player_c]).strip()
+        if not player or player.lower() == "nan":
+            continue
+        try:
+            pos_rank = int(float(row[rank_c]))
+        except (TypeError, ValueError):
+            continue
+        tier = None
+        if tier_c is not None:
+            tier = _parse_tier(row[tier_c]) if pd.notna(row[tier_c]) else None
+        out.append({
+            "id": name_key(player),
+            "player": player,
+            "pos": pos,
+            "posRank": pos_rank,
+            "tier": tier,
+        })
+    out.sort(key=lambda r: (r["pos"], r["posRank"]))
+    return out
+
+
 def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
-          positions: tuple[str, ...] = ("QB", "RB", "WR", "TE")) -> dict:
+          positions: tuple[str, ...] = ("QB", "RB", "WR", "TE"),
+          pos_dir=None) -> dict:
     """One independent positional board per ranking source."""
     by_id = {s["id"]: s for s in specs}
     out: dict = {}
@@ -127,12 +184,23 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
         if spec.get("role") == "market":
             continue                       # ADP is a yardstick, not a ranking
 
+        rows = []
+        tiers_from = "derived"
+
+        # A second sheet in the ranker's own workbook (Joel), or a separate
+        # file in data/sources/positional/ (Faraz). Either way these are the
+        # ranker's published breaks and are used verbatim.
         sheet = spec.get("positional_sheet")
         if sheet:
             rows = from_tier_sheet(src.path, sheet, positions)
             tiers_from = "source"
-        else:
-            rows = []
+
+        pos_glob = spec.get("positional_file")
+        if not rows and pos_glob and pos_dir is not None:
+            hit = claim(discover(pos_dir), pos_glob) if pos_dir.exists() else None
+            if hit:
+                rows = from_positional_file(hit, positions)
+                tiers_from = "source"
         if not rows:
             rows = derive(src.frame, positions)
             tiers_from = "derived"
