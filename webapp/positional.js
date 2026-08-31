@@ -39,7 +39,7 @@ function renderNote() {
       ? 'Tiers are <strong>his own published tier breaks</strong>.'
       : 'This ranker publishes no positional tiers, so tiers are <strong>derived</strong> ' +
         'from gaps in his own overall ranks.') +
-    ' Drafted players drop off the list.';
+    ' Drafted players drop off the list.' + tagLegend(b);
 }
 
 function renderColumns() {
@@ -76,8 +76,8 @@ function renderColumns() {
           ${blk.players.map((p) => `
             <div class="posrow r-${pos}" data-id="${esc(p.id)}">
               <span class="posrank">${pos}${p.posRank}</span>
-              <span class="posname">${esc(p.player)}</span>
-              ${b.hasStatus ? statusTag(p.status) : ''}
+              <span class="posname" title="${esc(p.player)}">${esc(p.player)}</span>
+              ${b.hasStatus ? statusTag(p.tags) : ''}
               <span class="posteam">${esc(p.team || '')}</span>
               ${p.inPool
                 ? `<button class="wltake" data-act="take" title="Assign to ${esc(seatName(clock))}">+</button>`
@@ -88,28 +88,67 @@ function renderColumns() {
   }).join('');
 }
 
-/* A ranker's own conviction tag, shown only where that ranker published one.
- * Joel marks Target / I'll Pass / Avoiding; Faraz publishes nothing, so his
- * board carries no tags at all rather than a column of blanks. The text is
- * always rendered -- colour alone never carries the meaning. */
-/* Four positional columns share the width, so a full-word chip costs the
- * player's name characters it cannot spare -- "Christian McCaffrey" was
- * truncating to "Christia...". Abbreviated here, with the full wording kept
- * on hover. Still a word rather than a bare colour, so the meaning survives
- * for anyone who cannot distinguish the hues. */
-const STATUS_META = {
-  'target':    ['st-target', 'TGT',   'Target'],
-  "i'll pass": ['st-pass',   'PASS',  "I'll Pass"],
-  'avoiding':  ['st-avoid',  'AVOID', 'Avoiding'],
+/* --------------------------------------------------------- ranker tags
+ * A ranker's own conviction markers, shown only where that ranker publishes
+ * them. Joel marks one per player; Faraz marks up to four ("Target, High
+ * Upside, Safe"), so both arrive as a list.
+ *
+ * Abbreviated because four positional columns share the width and full words
+ * truncated "Christian McCaffrey" to "Christia...". At most two show, ordered
+ * by how much they should change a pick, with any remainder behind a +N. The
+ * full wording is on hover and spelled out in the legend above the board, so
+ * colour never carries the meaning on its own. */
+const TAG_META = {
+  'avoid':       ['st-avoid',  'AVOID', 'Avoid'],
+  'avoiding':    ['st-avoid',  'AVOID', 'Avoiding'],
+  "i'll pass":   ['st-pass',   'PASS',  "I'll Pass"],
+  'target':      ['st-target', 'TGT',   'Target'],
+  'sleeper':     ['st-sleep',  'SLP',   'Sleeper'],
+  'boom/bust':   ['st-boom',   'B/B',   'Boom / Bust'],
+  'high upside': ['st-upside', 'UP',    'High Upside'],
+  'safe':        ['st-safe',   'SAFE',  'Safe'],
 };
-function statusTag(status) {
+/* Most decision-relevant first: what would actually change a pick. */
+const TAG_ORDER = ['avoid', 'avoiding', "i'll pass", 'target', 'sleeper',
+                   'boom/bust', 'high upside', 'safe'];
+/* One visible chip. Two fitted Joel's board but not Faraz's: he tags 155
+ * of 232 players and often with three at once, and at four columns the
+ * second chip cost the player's name a quarter of its width. The rest
+ * are on hover and in the legend. */
+const TAG_SHOWN = 1;
+
+const tagRank = (t) => {
+  const i = TAG_ORDER.indexOf(String(t).trim().toLowerCase());
+  return i === -1 ? TAG_ORDER.length : i;
+};
+
+function statusTag(tags) {
   // An empty cell rather than no cell: on a tagged board every row must keep
   // the same column count or the names stop lining up.
-  if (!status) return '<span class="stag"></span>';
-  const [cls, short, full] =
-    STATUS_META[String(status).trim().toLowerCase()] || ['st-other', String(status), String(status)];
-  return `<span class="stag ${cls}" title="${esc(full)} — this ranker's own tag">${esc(short)}</span>`;
+  const list = (tags || []).slice().sort((a, b) => tagRank(a) - tagRank(b));
+  if (!list.length) return '<span class="stags"></span>';
+  const full = list.map((t) => (TAG_META[String(t).toLowerCase()] || [0, 0, t])[2]).join('  \u00b7  ');
+  const shown = list.slice(0, TAG_SHOWN).map((t) => {
+    const meta = TAG_META[String(t).toLowerCase()] || ['st-other', String(t)];
+    return `<span class="stag ${meta[0]}">${esc(meta[1])}</span>`;
+  }).join('');
+  const extra = list.length - TAG_SHOWN;
+  return `<span class="stags" title="${esc(full)}">${shown}` +
+         (extra > 0 ? `<span class="stag st-more">+${extra}</span>` : '') + '</span>';
 }
+
+/* Letters are only learnable if something spells them out. */
+function tagLegend(board) {
+  if (!board.hasStatus) return '';
+  const seen = new Set();
+  for (const p of board.players) for (const t of (p.tags || [])) seen.add(String(t).toLowerCase());
+  const items = TAG_ORDER.filter((t) => seen.has(t)).map((t) => {
+    const [cls, short, full] = TAG_META[t];
+    return `<span class="legitem"><span class="stag ${cls}">${esc(short)}</span>${esc(full)}</span>`;
+  }).join('');
+  return items ? `<div class="taglegend">${items}</div>` : '';
+}
+
 
 function render() {
   el('undoBtn').disabled = state.picks.length === 0;

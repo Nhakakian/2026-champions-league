@@ -126,6 +126,20 @@ def derive(frame: pd.DataFrame, positions: tuple[str, ...],
     return out
 
 
+def _split_tags(value: object) -> list[str]:
+    """One or many conviction tags from a cell. Faraz writes several comma
+    separated; Joel writes one. Both end up as a list so the front end has a
+    single shape to render."""
+    if value is None:
+        return []
+    try:
+        if pd.isna(value):
+            return []
+    except (TypeError, ValueError):
+        pass
+    return [t.strip() for t in str(value).split(",") if t.strip()]
+
+
 def from_positional_file(path, positions: tuple[str, ...]) -> list[dict]:
     """Read a ranker's own positional board from a separate file.
 
@@ -145,6 +159,9 @@ def from_positional_file(path, positions: tuple[str, ...]) -> list[dict]:
         return []
     pos_c, player_c, rank_c = need
     tier_c = cols.get("tier")
+    # A ranker may publish several indicators for one player
+    # ("Target, High Upside, Safe"), unlike a single status.
+    ind_c = cols.get("indicators") or cols.get("status") or cols.get("tags")
 
     out: list[dict] = []
     for _, row in raw.iterrows():
@@ -167,6 +184,7 @@ def from_positional_file(path, positions: tuple[str, ...]) -> list[dict]:
             "pos": pos,
             "posRank": pos_rank,
             "tier": tier,
+            "tags": _split_tags(row[ind_c]) if ind_c is not None else [],
         })
     out.sort(key=lambda r: (r["pos"], r["posRank"]))
     return out
@@ -210,18 +228,21 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
         # This ranker's own conviction tag, where the file carries one. Joel
         # publishes Target / I'll Pass / Avoiding; Faraz publishes none, so
         # his board simply has no tags rather than blank space.
-        status_by_id: dict[str, str] = {}
+        status_by_id: dict[str, list[str]] = {}
         if "status" in src.frame.columns:
             for r in src.frame.itertuples():
-                v = getattr(r, "status", None)
-                if v is not None and pd.notna(v):
-                    status_by_id[r.name_key] = str(v)
+                tags = _split_tags(getattr(r, "status", None))
+                if tags:
+                    status_by_id[r.name_key] = tags
 
         for row in rows:
             hit = pool.get(row["id"])
             row["team"] = hit["team"] if hit else None
             row["inPool"] = hit is not None
-            row["status"] = status_by_id.get(row["id"])
+            # A positional file may carry its own tags; otherwise fall back to
+            # whatever the ranker's overall file said about this player.
+            if not row.get("tags"):
+                row["tags"] = status_by_id.get(row["id"], [])
 
         out[src.id] = {
             "label": src.label,
@@ -229,7 +250,7 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
             "tiersFrom": tiers_from,
             "counts": {p: sum(1 for r in rows if r["pos"] == p) for p in positions},
             "notInPool": sum(1 for r in rows if not r["inPool"]),
-            "hasStatus": any(r.get("status") for r in rows),
+            "hasStatus": any(r.get("tags") for r in rows),
             "players": rows,
         }
     return out
