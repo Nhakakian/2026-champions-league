@@ -26,6 +26,9 @@ RANK_HINTS = ("rank", "rk", "adp", "ecr", "overall", "consensus", "avg")
 # Age is optional and only some sources carry it, but for a dynasty board it
 # is close to the whole point, so it is read wherever it is offered.
 AGE_HINTS = ("age", "player age")
+# A ranker's own conviction tag ("Target", "I'll Pass", "Avoiding").
+# Only some publish one; it is never inferred.
+STATUS_HINTS = ("status", "tag")
 
 
 @dataclass
@@ -77,6 +80,16 @@ def _read_any(path: Path) -> pd.DataFrame:
     # Everything was read as object to keep the header scan honest; let pandas
     # re-infer so numeric ranks behave like numbers again.
     return frame.infer_objects()
+
+
+def _clean_status(value: object) -> str | None:
+    """Normalise a conviction tag; blank and NaN both mean "no opinion"."""
+    if value is None:
+        return None
+    token = str(value).strip()
+    if not token or token.lower() in {"nan", "-", "none"}:
+        return None
+    return token
 
 
 def _pick_column(columns: list[str], hints: tuple[str, ...]) -> str | None:
@@ -149,6 +162,7 @@ def load(spec: dict, path: Path) -> LoadedSource:
     pos_col = resolve("pos", POS_HINTS)
     team_col = resolve("team", TEAM_HINTS)
     age_col = resolve("age", AGE_HINTS)
+    status_col = resolve("status", STATUS_HINTS)
 
     frame = pd.DataFrame(
         {
@@ -159,6 +173,7 @@ def load(spec: dict, path: Path) -> LoadedSource:
     frame["pos"] = raw[pos_col].map(normalize_position) if pos_col else None
     frame["team"] = raw[team_col].map(normalize_team) if team_col else None
     frame["age"] = pd.to_numeric(raw[age_col], errors="coerce") if age_col else pd.NA
+    frame["status"] = (raw[status_col].map(_clean_status) if status_col else None)
     frame["name_key"] = frame["player_raw"].map(name_key)
 
     dropped = int(frame["rank_raw"].isna().sum())

@@ -139,10 +139,21 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
 
         # Attach team from the composite pool, and flag anyone the board does
         # not carry so the UI can grey out their draft button.
+        # This ranker's own conviction tag, where the file carries one. Joel
+        # publishes Target / I'll Pass / Avoiding; Faraz publishes none, so
+        # his board simply has no tags rather than blank space.
+        status_by_id: dict[str, str] = {}
+        if "status" in src.frame.columns:
+            for r in src.frame.itertuples():
+                v = getattr(r, "status", None)
+                if v is not None and pd.notna(v):
+                    status_by_id[r.name_key] = str(v)
+
         for row in rows:
             hit = pool.get(row["id"])
             row["team"] = hit["team"] if hit else None
             row["inPool"] = hit is not None
+            row["status"] = status_by_id.get(row["id"])
 
         out[src.id] = {
             "label": src.label,
@@ -150,6 +161,7 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
             "tiersFrom": tiers_from,
             "counts": {p: sum(1 for r in rows if r["pos"] == p) for p in positions},
             "notInPool": sum(1 for r in rows if not r["inPool"]),
+            "hasStatus": any(r.get("status") for r in rows),
             "players": rows,
         }
     return out
