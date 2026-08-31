@@ -39,12 +39,44 @@ class LoadedSource:
     notes: list[str] = field(default_factory=list)
 
 
+def _find_header_row(raw: pd.DataFrame, scan: int = 12) -> int:
+    """Index of the row that actually holds the column headings.
+
+    A hand-made rankings sheet often opens with a title and a colour legend
+    before the real headings -- Joel's workbook gained exactly that between
+    two updates, which silently turned every column into "Unnamed: N". Look
+    for the first row carrying both a rank-ish and a player-ish cell, and
+    fall back to row 0 so a well-formed file is unaffected.
+    """
+    for i in range(min(scan, len(raw))):
+        cells = [str(c).strip().lower() for c in raw.iloc[i].tolist() if pd.notna(c)]
+        if not cells:
+            continue
+        has_rank = any(c in {"rank", "rk", "overall", "#"} or c.startswith("rank") for c in cells)
+        has_player = any(c in {"player", "name", "player name"} for c in cells)
+        if has_rank and has_player:
+            return i
+    return 0
+
+
 def _read_any(path: Path) -> pd.DataFrame:
     """Read a CSV/TSV/XLSX, tolerating the BOM that Sleeper exports carry."""
     if path.suffix.lower() in {".csv", ".tsv"}:
         sep = "\t" if path.suffix.lower() == ".tsv" else ","
-        return pd.read_csv(path, encoding="utf-8-sig", sep=sep)
-    return pd.read_excel(path)
+        raw = pd.read_csv(path, encoding="utf-8-sig", sep=sep, header=None, dtype=object)
+    else:
+        raw = pd.read_excel(path, header=None, dtype=object)
+
+    head = _find_header_row(raw)
+    frame = raw.iloc[head + 1:].copy()
+    frame.columns = [str(c).strip() if pd.notna(c) else f"Unnamed: {j}"
+                     for j, c in enumerate(raw.iloc[head].tolist())]
+    # Drop columns with no heading at all and rows that are entirely blank.
+    frame = frame.loc[:, [not str(c).startswith("Unnamed: ") for c in frame.columns]]
+    frame = frame.dropna(how="all").reset_index(drop=True)
+    # Everything was read as object to keep the header scan honest; let pandas
+    # re-infer so numeric ranks behave like numbers again.
+    return frame.infer_objects()
 
 
 def _pick_column(columns: list[str], hints: tuple[str, ...]) -> str | None:
