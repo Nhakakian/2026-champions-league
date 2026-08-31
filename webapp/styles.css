@@ -467,7 +467,19 @@ tbody tr.mypick td:first-child { padding-left: 9px; }
 
 /* ---- draft board grid ---- */
 .boardgrid-panel { margin: 14px 16px 0; }
-.gridwrap { overflow: auto; max-height: 46vh; border: 1px solid var(--line); border-radius: 6px; }
+/* height is set inline by draft.js (S/M/L presets or a drag); the value here
+   is only the pre-script default so the board does not jump on load.
+   resize: vertical gives a native drag handle on the bottom edge. */
+.gridwrap {
+  overflow: auto;
+  height: 46vh;
+  min-height: 90px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.panel-head .gridsize { margin-left: auto; }
+.gridsize button { min-width: 26px; padding: 2px 7px; font-size: 11px; }
 .dgrid { width: 100%; border-collapse: collapse; font-size: 11px; }
 .dgrid th, .dgrid td { border: 1px solid var(--line); padding: 3px 5px; }
 .dgrid thead th {

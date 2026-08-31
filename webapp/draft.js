@@ -276,6 +276,58 @@ function renderNeeds(mine) {
   }).join('') + `<p class="hint" style="margin:6px 0 0">Through round ${round}. Bar is you, notch is the league.</p>`;
 }
 
+/* ---------------------------------------------------------- board height
+ * The draft board is mostly empty rows in the early rounds, which is exactly
+ * when you most want to see the rankings underneath it. Height is settable
+ * from the S/M/L presets or by dragging the grid's bottom edge, and it is
+ * stored with the rest of the board state -- so it is per board, and the
+ * dynasty page can sit short while the redraft page stays tall.
+ */
+const GRID_DEFAULT_VH = 46;
+
+function applyGridHeight() {
+  const wrap = document.querySelector('.gridwrap');
+  if (!wrap) return;
+  const vh = state.gridH || GRID_DEFAULT_VH;
+  wrap.style.height = `${vh}vh`;
+  const seg = el('gridSize');
+  if (seg) {
+    // Mark the preset only when it matches; a dragged height matches none.
+    for (const b of seg.querySelectorAll('button')) {
+      b.classList.toggle('on', Math.abs(+b.dataset.h - vh) < 0.5);
+    }
+  }
+}
+
+function setGridHeight(vh) {
+  state.gridH = Math.max(10, Math.min(90, Math.round(vh * 10) / 10));
+  applyGridHeight();
+  persist();
+}
+
+function wireGridSize() {
+  const seg = el('gridSize');
+  if (seg) {
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-h]');
+      if (b) setGridHeight(+b.dataset.h);
+    });
+  }
+  const wrap = document.querySelector('.gridwrap');
+  if (!wrap || typeof ResizeObserver === 'undefined') return;
+  // Dragging the native resize handle writes an inline pixel height. Convert
+  // it back to vh so the choice survives a different window size, and ignore
+  // the observer firing for our own vh writes.
+  let settling = true;
+  const ro = new ResizeObserver(() => {
+    if (settling) return;
+    const px = wrap.getBoundingClientRect().height;
+    const vh = (px / window.innerHeight) * 100;
+    if (Math.abs(vh - (state.gridH || GRID_DEFAULT_VH)) > 0.6) setGridHeight(vh);
+  });
+  requestAnimationFrame(() => { settling = false; ro.observe(wrap); });
+}
+
 /* ------------------------------------------------- gone before next pick */
 /* Who disappears before you pick again.
  *
@@ -517,5 +569,7 @@ loadData().then((ok) => {
     else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); render(); }
   });
 
+  applyGridHeight();
+  wireGridSize();
   render();
 });
