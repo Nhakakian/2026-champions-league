@@ -28,6 +28,13 @@ NOTES AND BYE WEEKS:
   Bye weeks: filled in from FantasyPros (config/byes.yml, all 32 teams).
   To change a season, edit that file and rebuild.
 
+MOVING A BOARD BETWEEN COMPUTERS:
+  Picks, stars and notes live in ONE browser on ONE machine -- the site is
+  static, so there is no server holding your data. Use the "Sync & backup"
+  panel: "Copy sync link" and open that link on the other computer, or
+  "Save file" and "Restore..." if the link is unwieldy. Either one is also
+  your backup if a browser dies mid-draft.
+
 GUARANTEED-STORAGE MODE (if the red storage warning appears):
   python -m http.server 8777
   then open http://localhost:8777/webapp/index.html

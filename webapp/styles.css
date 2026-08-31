@@ -800,3 +800,14 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
    in an undifferentiated list. */
 .grow.watched { background: color-mix(in srgb, var(--bad) 12%, transparent); border-radius: 4px; }
 .grow.watched .gname { font-weight: 700; }
+
+/* ------------------------------------------------------------------ sync
+   Carrying a board between machines. Deliberately three plain buttons and a
+   sentence of explanation: this is the one place the app has to admit that
+   browser storage does not travel, and a vague control here costs someone
+   their watch list. */
+.syncbtns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.syncbtns .btn { flex: 1 1 auto; }
+.filebtn { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+#syncMsg { margin: 4px 0 0; min-height: 1em; }
+#syncMsg.bad { color: var(--bad); font-weight: 600; }

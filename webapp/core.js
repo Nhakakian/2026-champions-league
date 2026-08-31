@@ -101,6 +101,144 @@ function platformRank(p) {
   return v == null ? null : v;
 }
 
+
+/* ======================================================================
+ * SYNC — moving your board between computers
+ *
+ * Picks, watch list and notes live in localStorage, which is per browser on
+ * one machine and never travels. This site is static hosting: there is no
+ * server to keep your data on, so there is nothing to sync against
+ * automatically. What follows makes the state portable instead -- a link you
+ * can paste, or a file you can carry -- which doubles as a backup if a
+ * browser dies mid-draft.
+ *
+ * The payload is stamped with its namespace, so a dynasty board can never be
+ * restored on top of the redraft board or the other way round.
+ * ==================================================================== */
+
+function currentStateBlob() {
+  return {
+    v: 1,
+    ns: NS || 'redraft',
+    savedAt: new Date().toISOString(),
+    league: state.data?.league?.name || null,
+    data: JSON.parse(localStorage.getItem(KEY) || '{}'),
+  };
+}
+
+function encodeState(blob) {
+  // base64 of UTF-8 JSON; encodeURIComponent first so non-ASCII names survive.
+  return btoa(unescape(encodeURIComponent(JSON.stringify(blob))));
+}
+function decodeState(text) {
+  return JSON.parse(decodeURIComponent(escape(atob(text))));
+}
+
+function applyStateBlob(blob) {
+  if (!blob || blob.v !== 1 || !blob.data) throw new Error('not a board backup');
+  const mine = NS || 'redraft';
+  if (blob.ns !== mine) {
+    throw new Error(
+      'that backup is from the ' + (blob.ns === 'dynasty' ? 'dynasty' : 'redraft') +
+      ' board \u2014 open that board and restore it there');
+  }
+  localStorage.setItem(KEY, JSON.stringify(blob.data));
+  location.reload();
+}
+
+function stateSummary(blob) {
+  const d = blob.data || {};
+  const when = blob.savedAt ? new Date(blob.savedAt).toLocaleString() : 'unknown time';
+  return (d.picks || []).length + ' picks \u00b7 ' + (d.watch || []).length +
+         ' starred \u00b7 ' + Object.keys(d.notes || {}).length + ' notes \u2014 saved ' + when;
+}
+
+/* A restore replaces everything, so say what is about to be lost. */
+function confirmRestore(blob) {
+  const now = currentStateBlob();
+  const d = now.data || {};
+  const busy = (d.picks || []).length || (d.watch || []).length ||
+               Object.keys(d.notes || {}).length;
+  if (!busy) return true;
+  return confirm('Restore will REPLACE what is on this board.\n\n' +
+    'Now:       ' + stateSummary(now) + '\n' +
+    'Restoring: ' + stateSummary(blob) + '\n\nContinue?');
+}
+
+function renderSync() {
+  const host = el('sync');
+  if (!host) return;
+  host.innerHTML =
+    '<p class="hint">Picks, stars and notes are saved in <em>this</em> browser only. ' +
+    'To carry them to another computer, copy a link or save a file.</p>' +
+    '<div class="syncbtns">' +
+    '<button id="syncCopy" class="btn">Copy sync link</button>' +
+    '<button id="syncSave" class="btn btn-quiet">Save file</button>' +
+    '<label class="btn btn-quiet filebtn">Restore\u2026' +
+    '<input type="file" id="syncLoad" accept=".json,application/json" hidden></label>' +
+    '</div><p class="hint" id="syncMsg"></p>';
+
+  const msg = (t, bad) => {
+    const m = el('syncMsg');
+    m.textContent = t;
+    m.classList.toggle('bad', !!bad);
+  };
+
+  el('syncCopy').addEventListener('click', async () => {
+    const link = location.origin + location.pathname + '#s=' + encodeState(currentStateBlob());
+    try {
+      await navigator.clipboard.writeText(link);
+      msg(link.length > 8000
+        ? 'Copied \u2014 but it is a long link. If it will not paste, use Save file instead.'
+        : 'Link copied. Open it on the other computer.');
+    } catch (_) {
+      // Clipboard is blocked over plain http and in some browsers; show the
+      // link rather than failing silently.
+      prompt('Copy this link:', link);
+    }
+  });
+
+  el('syncSave').addEventListener('click', () => {
+    const b = new Blob([JSON.stringify(currentStateBlob(), null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = (NS || 'redraft') + '-board-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    msg('Saved. Move that file to the other computer and use Restore.');
+  });
+
+  el('syncLoad').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const blob = JSON.parse(r.result);
+        if (confirmRestore(blob)) applyStateBlob(blob);
+      } catch (err) { msg(err.message || 'could not read that file', true); }
+    };
+    r.readAsText(file);
+    e.target.value = '';
+  });
+}
+
+/* A link opened with #s=... carries a board. Never apply it silently. */
+function offerHashImport() {
+  const m = /[#&]s=([^&]+)/.exec(location.hash);
+  if (!m) return;
+  let blob;
+  try { blob = decodeState(m[1]); } catch (_) { return; }
+  // Clear the fragment first, so declining or reloading does not re-prompt.
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    if (confirm('This link carries a saved board:\n\n' + stateSummary(blob) +
+                '\n\nLoad it here?')) {
+      if (confirmRestore(blob)) applyStateBlob(blob);
+    }
+  } catch (err) { alert(err.message); }
+}
+
 /* ------------------------------------------------------------------- boot */
 async function loadData() {
   let data = window.BOARD_DATA;
@@ -121,8 +259,10 @@ async function loadData() {
     state.curve.set(`${row.pos}|${row.pos_slot}`, row.delta);
   }
   restore();
+  offerHashImport();
   recompute();
   renderNav();
+  renderSync();
   warnIfStorageBlocked();
   return true;
 }
