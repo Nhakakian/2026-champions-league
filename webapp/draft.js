@@ -60,6 +60,14 @@ function renderClock() {
 
   el('curPick').textContent = done ? '—' : n + 1;
   el('curRound').textContent = done ? 'done' : roundOfPick(n);
+  // Sleeper's own notation: round.slot, slot zero-padded. Lets you line this
+  // board up against the Sleeper screen without counting.
+  const slotEl = el('curSlot');
+  if (slotEl) {
+    slotEl.textContent = done
+      ? '—'
+      : `${roundOfPick(n)}.${String((n % teams()) + 1).padStart(2, '0')}`;
+  }
   el('myCount').textContent = myRoster().length;
   el('assignTo').textContent = done ? '—' : seatName(clock);
 
