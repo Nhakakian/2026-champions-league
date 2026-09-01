@@ -24,7 +24,7 @@ from .normalize import name_key
 from .sources import claim, discover
 from .tiers import _local_thresholds
 
-TIER_LABEL = re.compile(r"^\s*T?(\d+)\s*$", re.I)
+TIER_LABEL = re.compile(r"^\s*(?:tier\s*|t)?(\d+)\s*$", re.I)
 
 
 def _parse_tier(value: object) -> int | None:
@@ -190,6 +190,31 @@ def from_positional_file(path, positions: tuple[str, ...]) -> list[dict]:
     return out
 
 
+def from_frame_tiers(frame, positions: tuple[str, ...]) -> list[dict]:
+    """Positional board from a source that publishes its tier inline.
+
+    Ordering comes from the source's own overall rank within each position,
+    and the tier is whatever it published for that player -- so these are the
+    ranker's real breaks, not ones cut from gaps.
+    """
+    out: list[dict] = []
+    for pos in positions:
+        sub = frame[frame["pos"] == pos].sort_values("rank")
+        for i, row in enumerate(sub.itertuples(), start=1):
+            tier = _parse_tier(getattr(row, "src_tier", None))
+            out.append({
+                "id": row.name_key,
+                "player": row.player_raw,
+                "pos": pos,
+                "posRank": i,
+                "tier": tier,
+                "tags": _split_tags(getattr(row, "status", None)),
+                "analysis": (lambda v: None if v is None or (isinstance(v, float) and v != v) else str(v))(
+                    getattr(row, "analysis", None)),
+            })
+    return out
+
+
 def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
           positions: tuple[str, ...] = ("QB", "RB", "WR", "TE"),
           pos_dir=None) -> dict:
@@ -212,6 +237,13 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
         if sheet:
             rows = from_tier_sheet(src.path, sheet, positions)
             tiers_from = "source"
+
+        # A source may publish its tier inline beside the ranking (Draft
+        # Sharks) rather than on a separate sheet or in a separate file.
+        if not rows and "src_tier" in src.frame.columns and src.frame["src_tier"].notna().any():
+            rows = from_frame_tiers(src.frame, positions)
+            if rows:
+                tiers_from = "source"
 
         pos_glob = spec.get("positional_file")
         if not rows and pos_glob and pos_dir is not None:
@@ -251,6 +283,7 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
             "counts": {p: sum(1 for r in rows if r["pos"] == p) for p in positions},
             "notInPool": sum(1 for r in rows if not r["inPool"]),
             "hasStatus": any(r.get("tags") for r in rows),
+            "hasAnalysis": any(r.get("analysis") for r in rows),
             "players": rows,
         }
     return out

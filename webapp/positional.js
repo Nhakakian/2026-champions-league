@@ -73,7 +73,7 @@ function renderColumns() {
   el('columns').innerHTML = POSITIONS.map((pos) => {
     const rows = available.filter((p) => p.pos === pos);
     if (!rows.length) {
-      return `<section class="poscol${b.hasStatus ? ' tagged' : ''}">
+      return `<section class="poscol${b.hasStatus ? ' tagged' : ''}${b.hasAnalysis ? ' analysed' : ''}">
         <div class="poshead"><span class="pos pos-${pos}">${pos}</span>
           <span class="muted">none left</span></div></section>`;
     }
@@ -85,7 +85,7 @@ function renderColumns() {
       else blocks.push({ tier: p.tier, players: [p] });
     }
 
-    return `<section class="poscol${b.hasStatus ? ' tagged' : ''}">
+    return `<section class="poscol${b.hasStatus ? ' tagged' : ''}${b.hasAnalysis ? ' analysed' : ''}">
       <div class="poshead">
         <span class="pos pos-${pos}">${pos}</span>
         <span class="muted">${rows.length} left</span>
@@ -98,6 +98,7 @@ function renderColumns() {
               <span class="posrank">${pos}${p.posRank}</span>
               <span class="posname" title="${esc(p.player)}">${esc(p.player)}</span>
               ${b.hasStatus ? statusTag(p.tags) : ''}
+              ${p.analysis ? `<button class="dsinfo" data-act="why" title="${esc(p.analysis)}">i</button>` : (b.hasAnalysis ? '<span class="dsinfo blank"></span>' : '')}
               <span class="posteam">${esc(p.team || '')}</span>
               ${p.inPool
                 ? `<button class="wltake" data-act="take" title="Assign to ${esc(seatName(clock))}">+</button>`
@@ -170,6 +171,20 @@ function tagLegend(board) {
 }
 
 
+/* The written note is long enough that a tooltip alone is a poor way to read
+ * it, so clicking pins it open under the row. The tooltip stays for a quick
+ * glance without committing the vertical space. */
+function toggleAnalysis(btn) {
+  const row = btn.closest('.posrow');
+  const open = row.nextElementSibling && row.nextElementSibling.classList.contains('posanalysis');
+  if (open) { row.nextElementSibling.remove(); btn.classList.remove('on'); return; }
+  const div = document.createElement('div');
+  div.className = 'posanalysis';
+  div.textContent = btn.title;
+  row.after(div);
+  btn.classList.add('on');
+}
+
 function render() {
   el('undoBtn').disabled = state.picks.length === 0;
   renderNote();
@@ -181,6 +196,8 @@ loadData().then((ok) => {
   buildPicker();
 
   el('columns').addEventListener('click', (e) => {
+    const why = e.target.closest('button[data-act=why]');
+    if (why) { toggleAnalysis(why); return; }
     const btn = e.target.closest('button[data-act=take]');
     if (!btn) return;
     draftPlayer(btn.closest('[data-id]').dataset.id);

@@ -29,6 +29,10 @@ AGE_HINTS = ("age", "player age")
 # A ranker's own conviction tag ("Target", "I'll Pass", "Avoiding").
 # Only some publish one; it is never inferred.
 STATUS_HINTS = ("status", "tag")
+# A ranker's own tier break, published alongside the ranking rather than
+# on a separate sheet, and any written note they attach to a player.
+TIER_HINTS = ("tier",)
+ANALYSIS_HINTS = ("analysis", "ds analysis", "notes", "comment", "writeup")
 
 
 @dataclass
@@ -163,6 +167,8 @@ def load(spec: dict, path: Path) -> LoadedSource:
     team_col = resolve("team", TEAM_HINTS)
     age_col = resolve("age", AGE_HINTS)
     status_col = resolve("status", STATUS_HINTS)
+    tier_col = resolve("tier", TIER_HINTS)
+    analysis_col = resolve("analysis", ANALYSIS_HINTS)
 
     frame = pd.DataFrame(
         {
@@ -174,6 +180,8 @@ def load(spec: dict, path: Path) -> LoadedSource:
     frame["team"] = raw[team_col].map(normalize_team) if team_col else None
     frame["age"] = pd.to_numeric(raw[age_col], errors="coerce") if age_col else pd.NA
     frame["status"] = (raw[status_col].map(_clean_status) if status_col else None)
+    frame["src_tier"] = raw[tier_col] if tier_col else None
+    frame["analysis"] = (raw[analysis_col].map(_clean_status) if analysis_col else None)
     frame["name_key"] = frame["player_raw"].map(name_key)
 
     dropped = int(frame["rank_raw"].isna().sum())

@@ -77,7 +77,7 @@ sources:
     label: Faraz dynasty SF
     short: Faraz
     match: "*faraz_dynasty*"
-    weight: 0.40
+    weight: 0.35
     scope: overall
     columns:
       player: name
@@ -110,11 +110,28 @@ sources:
   # why his weight sits below Faraz's: with missing_penalty at 0.35, a heavy
   # weight on a short list would push everyone he omits down the board for no
   # reason other than his list ending.
+  # Draft Sharks' 250-player dynasty board. The richest source here by a
+  # distance: their own tiers, positional ranks, age, bye, ADP, four
+  # projection horizons and a written note on every player.
+  - id: draftsharks
+    label: Draft Sharks
+    short: DS
+    match: "*draftsharks*"
+    weight: 0.25
+    scope: overall
+    columns:
+      player: Player
+      pos: Pos
+      team: Team
+      rank: Rank
+      age: Age
+    polarity: rank
+
   - id: tom
     label: Tom's ranking
     short: Tom
     match: "*tom_dynasty*"
-    weight: 0.25
+    weight: 0.20
     scope: overall
     columns:
       player: Player
@@ -148,7 +165,10 @@ sources:
     label: FantasyCalc dynasty SF
     short: Dyn
     match: "*fantasycalc*"
-    weight: 0.15
+    # Zeroed at your request now that Draft Sharks is in. Left loaded rather
+    # than deleted: its column still shows on the board as a second opinion,
+    # it just no longer votes. Raise the slider to bring it back.
+    weight: 0.00
     scope: overall
     columns:
       player: Player
