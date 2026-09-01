@@ -795,6 +795,7 @@ function renderNav() {
   const pages = NS === 'dynasty'
     ? [['dynasty-board.html', 'Board'],
        ['dynasty.html', 'Draft'],
+       ['dynasty-positional.html', 'Positional'],
        ['index.html', '\u2190 Redraft']]
     : [['index.html', 'Board'],
        ['draft.html', 'Draft'],

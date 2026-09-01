@@ -13,18 +13,38 @@ let sourceId = null;
 
 const boards = () => state.data.positional || {};
 
+/* Remembered per board: which ranker you were last looking at on the dynasty
+ * page has nothing to do with the redraft page. */
+const PICK_KEY = `cl-positional-source${NS ? ':' + NS : ''}`;
+
 function buildPicker() {
   const ids = Object.keys(boards());
-  el('sourcePick').innerHTML = ids
-    .map((id) => `<option value="${esc(id)}">${esc(boards()[id].label)}</option>`).join('');
-  // Remember the last ranker looked at, so a page reload doesn't reset it.
+  const host = el('sourcePick');
+  if (!host) return;
+
   let saved = null;
-  try { saved = localStorage.getItem('cl-positional-source'); } catch (_) { /* no storage */ }
+  try { saved = localStorage.getItem(PICK_KEY); } catch (_) { /* no storage */ }
   sourceId = ids.includes(saved) ? saved : ids[0];
-  el('sourcePick').value = sourceId;
-  el('sourcePick').addEventListener('change', (e) => {
-    sourceId = e.target.value;
-    try { localStorage.setItem('cl-positional-source', sourceId); } catch (_) { /* no storage */ }
+
+  // One button per ranker rather than a dropdown: swapping between rankers is
+  // the whole point of this page, and mid-draft that should be one click, not
+  // open-then-choose. The short label is used where there is one -- four
+  // dynasty rankers do not fit across a topbar at full length.
+  host.innerHTML = ids.map((id) => {
+    const b = boards()[id];
+    const short = b.short && b.short !== id ? b.short : b.label;
+    return `<button data-src="${esc(id)}" class="${id === sourceId ? 'on' : ''}" ` +
+           `title="${esc(b.label)}">${esc(short)}</button>`;
+  }).join('');
+
+  host.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-src]');
+    if (!b) return;
+    sourceId = b.dataset.src;
+    try { localStorage.setItem(PICK_KEY, sourceId); } catch (_) { /* no storage */ }
+    for (const x of host.querySelectorAll('button')) {
+      x.classList.toggle('on', x.dataset.src === sourceId);
+    }
     render();
   });
 }

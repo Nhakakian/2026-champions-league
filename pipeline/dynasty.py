@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from . import composite, match, sources, tiers
+from . import composite, match, positional, sources, tiers
 
 
 def _draft_order(cfg: dict) -> list[str]:
@@ -148,6 +148,11 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
             "and re-run. The page renders an empty pool until then."
         )
 
+    positional_boards = positional.build(
+        loaded, specs, {p["id"]: p for p in players},
+        pos_dir=drop_zone / "positional",
+    ) if players else {}
+
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "namespace": "dynasty",
@@ -175,7 +180,10 @@ def build(cfg: dict, drop_zone: Path, config_dir: Path,
         # The site the draft is actually being run on. Its ranking predicts
         # the room regardless of what the composite thinks.
         "platformSourceId": platform_id,
-        "positional": {},
+        # Per-ranker positional boards, same machinery as the redraft page.
+        # None of these rankers publishes their own tier breaks, so tiers are
+        # derived from gaps in each ranker's own overall order.
+        "positional": positional_boards,
         "flagThresholds": {
             "leagueValue": 0, "leagueReach": 0,   # no history model here
             "marketValue": float((cfg.get("flags") or {}).get("market_value", 15)),

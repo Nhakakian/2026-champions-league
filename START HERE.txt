@@ -11,8 +11,9 @@ UPDATE THE RANKINGS (needs Python 3):
   4. Reopen webapp/index.html
 
 DYNASTY STARTUP DRAFT (separate draft, separate everything):
-  Board  webapp/dynasty-board.html   rankings, weights, filters
-  Draft  webapp/dynasty.html         record picks on draft night
+  Board       webapp/dynasty-board.html       rankings, weights, filters
+  Draft       webapp/dynasty.html             record picks on draft night
+  Positional  webapp/dynasty-positional.html  one ranker at a time, by position
 
   Its rankings go in  data/dynasty/  -- NOT data/sources/.
   The grey chip beside each name on the Draft page is Sleeper's own rank:

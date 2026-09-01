@@ -855,3 +855,8 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
    guessed at. Only lists the tags the selected ranker actually uses. */
 .taglegend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; }
 .legitem { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--dim); }
+
+/* The ranker switcher sits in the topbar and can hold four names on the
+   dynasty board, so it wraps rather than pushing the counters off the edge. */
+#sourcePick { flex-wrap: wrap; }
+#sourcePick button { white-space: nowrap; }
