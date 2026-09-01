@@ -12,7 +12,10 @@ let query = '';
 
 // How deep "Best available" runs. Roughly two rounds of a 10-team league, so
 // what you can see covers the gap until your next pick.
-const BEST_COUNT = 20;
+/* How many players Best Available lists. Settable on the page and stored
+ * with the rest of the board state, so it is per board and survives a
+ * reload. 0 means every player left. */
+const BEST_DEFAULT = 50;
 
 /* ------------------------------------------------------------------ rows */
 function seatOptions(selected) {
@@ -162,7 +165,9 @@ function renderBest() {
   let avail = state.players.filter((p) => !state.drafted.has(p.id));
   if (bestFilter === 'WATCH') avail = avail.filter((p) => state.watch.has(p.id));
   else avail = avail.filter((p) => matchesPosFilter(p, bestFilter));
-  const rows = avail.sort((a, b) => a.compositeRank - b.compositeRank).slice(0, BEST_COUNT);
+  const sorted = avail.sort((a, b) => a.compositeRank - b.compositeRank);
+  const n = state.bestN ?? BEST_DEFAULT;
+  const rows = n > 0 ? sorted.slice(0, n) : sorted;
   el('best').innerHTML = rows.length ? rows.map(playerRow).join('')
     : `<p class="muted">${bestFilter === 'WATCH'
         ? 'No one on your watch list. Click ★ on any player to add them.'
@@ -311,6 +316,26 @@ function setGridHeight(vh) {
   state.gridH = Math.max(10, Math.min(90, Math.round(vh * 10) / 10));
   applyGridHeight();
   persist();
+}
+
+function wireBestCount() {
+  const seg = el('bestCount');
+  if (!seg) return;
+  const mark = () => {
+    const n = state.bestN ?? BEST_DEFAULT;
+    for (const b of seg.querySelectorAll('button')) {
+      b.classList.toggle('on', +b.dataset.n === n);
+    }
+  };
+  seg.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-n]');
+    if (!b) return;
+    state.bestN = +b.dataset.n;
+    persist();
+    mark();
+    render();
+  });
+  mark();
 }
 
 function wireGridSize() {
@@ -581,5 +606,6 @@ loadData().then((ok) => {
 
   applyGridHeight();
   wireGridSize();
+  wireBestCount();
   render();
 });

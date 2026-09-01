@@ -898,3 +898,12 @@ div.rowinfo { border-bottom: 1px solid var(--line); }
 /* Keep the marker beside the name without stealing its width. */
 td.name { display: flex; align-items: center; gap: 5px; }
 td.name .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ------------------------------------------------------- best available
+   The list scrolls inside its own panel rather than stretching the page.
+   With 50 or more rows a page-length list pushes the sidebar -- your team,
+   what is about to be taken -- off screen, and that sidebar is the reason to
+   look at this page at all. */
+#best { max-height: 62vh; overflow-y: auto; }
+.panel-head .bestcount { margin-left: 6px; }
+.bestcount button { min-width: 30px; padding: 2px 6px; font-size: 11px; }

@@ -47,6 +47,7 @@ const state = {
   order: [],         // manager names, index 0 = seat 1
   seat: null,        // 1..teams — which seat is yours
   gridH: null,       // draft-board height in vh; null = the CSS default
+  bestN: null,       // how many Best Available rows; 0 = all, null = default
   notes: new Map(),  // player id -> your own note. Namespaced with the
                      // rest of the draft state, so dynasty notes and
                      // redraft notes are separate sets entirely.
@@ -803,6 +804,7 @@ function persist() {
         .map((s) => [s.id, s.weight])),
       notes: Object.fromEntries(state.notes),
       gridH: state.gridH,
+      bestN: state.bestN,
     }));
   } catch (_) { /* private mode — the board still works, it just won't survive a reload */ }
 }
@@ -818,6 +820,7 @@ function restore() {
     state.watch = new Set(raw.watch || []);
     state.notes = new Map(Object.entries(raw.notes || {}));
     if (typeof raw.gridH === 'number') state.gridH = raw.gridH;
+    if (typeof raw.bestN === 'number') state.bestN = raw.bestN;
     if (Array.isArray(raw.order) && raw.order.length) state.order = raw.order;
     if (raw.seat !== undefined && raw.seat !== null) state.seat = raw.seat;
     // Weights are shared across pages so every page ranks identically.
