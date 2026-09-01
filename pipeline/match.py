@@ -52,6 +52,18 @@ def _record(rec: dict, sid: str, row) -> None:
     rec["raw"][sid] = float(row.rank_raw)
 
 
+def _text_of(row, field: str) -> str | None:
+    """A free-text field from a source row, or None. Most sources have none."""
+    v = getattr(row, field, None)
+    try:
+        if v is None or pd.isna(v):
+            return None
+    except (TypeError, ValueError):
+        return None
+    text = str(v).strip()
+    return text or None
+
+
 def _age_of(row):
     """Age if this source carries one, else None. Not every source does."""
     v = getattr(row, "age", None)
@@ -88,6 +100,7 @@ def resolve(sources: list, aliases: dict[str, str]) -> tuple[pd.DataFrame, list[
                 "ranks": {},
                 "raw": {},
                 "age": _age_of(row),
+                "analysis": _text_of(row, "analysis"),
             }
             players[key] = rec
             by_last[_last(key)].append(key)
@@ -98,6 +111,9 @@ def resolve(sources: list, aliases: dict[str, str]) -> tuple[pd.DataFrame, list[
             # first, and a player's age does not depend on who is ranking him.
             if rec.get("age") is None:
                 rec["age"] = _age_of(row)
+            # First source with a write-up wins; only one of them has any.
+            if not rec.get("analysis"):
+                rec["analysis"] = _text_of(row, "analysis")
         return rec
 
     for src in ordered:
@@ -158,6 +174,7 @@ def resolve(sources: list, aliases: dict[str, str]) -> tuple[pd.DataFrame, list[
                 "pos": r["pos"],
                 "team": r["team"],
                 "age": r.get("age"),
+                "analysis": r.get("analysis"),
                 **{f"rank__{sid}": r["ranks"].get(sid) for sid in (s.id for s in sources)},
                 **{f"raw__{sid}": r["raw"].get(sid) for sid in (s.id for s in sources)},
             }

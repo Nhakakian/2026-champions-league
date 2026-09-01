@@ -885,3 +885,16 @@ body.dynasty .nav a.on { background: var(--accent-soft); color: #5b21b6; }
 }
 /* The same marker inline in prose, so the sentence points at the real thing. */
 .dsinfo.inline { display: inline-block; vertical-align: middle; margin: 0 1px; cursor: default; }
+
+/* A pinned write-up, on the board (a table row) or a draft row (a div). */
+tr.rowinfo td, div.rowinfo {
+  font-size: 11px; line-height: 1.45; color: var(--dim);
+  padding: 5px 10px 7px 34px;
+  border-left: 2px solid var(--accent);
+  background: var(--panel-2);
+  white-space: normal;
+}
+div.rowinfo { border-bottom: 1px solid var(--line); }
+/* Keep the marker beside the name without stealing its width. */
+td.name { display: flex; align-items: center; gap: 5px; }
+td.name .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

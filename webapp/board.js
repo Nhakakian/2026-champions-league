@@ -115,7 +115,7 @@ function render() {
         case 'watch': return `<td class="starcol"><button class="star ${
           state.watch.has(p.id) ? 'on' : ''}" data-act="watch">★</button></td>`;
         case 'compositeRank': return `<td class="num">${p.compositeRank}</td>`;
-        case 'player': return `<td class="name">${esc(p.player)}</td>`;
+        case 'player': return `<td class="name"><span class="nm">${esc(p.player)}</span>${infoMark(p)}</td>`;
         case 'pos': return `<td><span class="pos pos-${p.pos}">${p.pos || ''}</span></td>`;
         case 'team': return `<td>${esc(p.team || '—')}</td>`;
         case 'bye': return `<td class="num">${p.bye ?? '—'}</td>`;
@@ -254,6 +254,8 @@ function wire() {
     if (e.target.closest('button[data-act=watch]')) { toggleWatch(id); render(); return; }
     const nb = e.target.closest('button[data-act=note]');
     if (nb) { editNote(nb, id); return; }
+    const wb = e.target.closest('button[data-act=why]');
+    if (wb) { toggleInfo(wb, tr, columns().length); return; }
     // Shift-click records the pick as yours; a plain click defers to the snake.
     toggleDrafted(id, e.shiftKey ? true : undefined);
     render();

@@ -38,7 +38,7 @@ function playerRow(p) {
       <span class="badge" style="--tier-c:${tierColor(p.tier)}"
             title="Tier ${p.tier ?? '—'}">${p.tier ?? '—'}</span>
       <span class="pos pos-${p.pos}">${p.pos || ''}</span>
-      <span class="pnamewrap"><span class="pname">${esc(p.player)}</span>${
+      <span class="pnamewrap"><span class="pname">${esc(p.player)}</span>${infoMark(p)}${
         plat == null ? '' : `<span class="platrank" title="${esc(platformLabel())} rank — what the rest of the draft is most likely seeing">${esc(platformShort())} ${trim(plat)}</span>`}${note ? `<span class="pnote" data-act="note" title="${esc(note)}">${esc(note)}</span>` : `<button class="noteadd" data-act="note" title="Add a note">+</button>`}</span>
       <span class="pmeta">${esc(p.team || '')}${p.age ? ` · <b class="agev${ageClass(p.age, p.pos)}">${trim(p.age)}y</b>` : ''}${p.bye ? ` · bye ${p.bye}` : ''} · #${p.compositeRank}
         ${p.adp == null ? '' : `· ADP ${trim(p.adp)}`}</span>
@@ -465,6 +465,8 @@ function buildSeatSelect() {
 function wirePlayerRows(container) {
   container.addEventListener('click', (e) => {
     // The note affordance is a span, not a button, so it is matched first.
+    const whyEl = e.target.closest('button[data-act=why]');
+    if (whyEl) { toggleInfo(whyEl, whyEl.closest('.prow'), 0); return; }
     const noteEl = e.target.closest('[data-act=note]');
     if (noteEl) {
       editNote(noteEl, noteEl.closest('[data-id]').dataset.id);

@@ -239,6 +239,48 @@ function offerHashImport() {
   } catch (err) { alert(err.message); }
 }
 
+
+/* ------------------------------------------------------- player write-ups
+ * One source (Draft Sharks) writes a paragraph on each player. It is worth
+ * having on the board and on the draft page too, not just the positional
+ * one: mid-draft a quick read is exactly when it is useful.
+ *
+ * The marker is rendered only where a write-up exists, so boards whose
+ * sources carry none are untouched.
+ */
+function infoMark(p) {
+  return p.analysis
+    ? `<button class="dsinfo" data-act="why" title="${esc(p.analysis)}">i</button>`
+    : '';
+}
+
+/* Pin the note open beneath its row. `host` is the element the expansion
+ * should follow, and `span` how many table columns it must cross -- 0 for a
+ * non-table row. */
+function toggleInfo(btn, host, span) {
+  const next = host.nextElementSibling;
+  if (next && next.classList.contains('rowinfo')) {
+    next.remove();
+    btn.classList.remove('on');
+    return;
+  }
+  let node;
+  if (span > 0) {
+    node = document.createElement('tr');
+    node.className = 'rowinfo';
+    const td = document.createElement('td');
+    td.colSpan = span;
+    td.textContent = btn.title;
+    node.appendChild(td);
+  } else {
+    node = document.createElement('div');
+    node.className = 'rowinfo';
+    node.textContent = btn.title;
+  }
+  host.after(node);
+  btn.classList.add('on');
+}
+
 /* ------------------------------------------------------------------- boot */
 async function loadData() {
   let data = window.BOARD_DATA;

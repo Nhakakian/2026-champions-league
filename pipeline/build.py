@@ -287,6 +287,7 @@ def main() -> int:
             "team": row["team"],
             "bye": bye_map.get(row["team"]) if pd.notna(row["team"]) else None,
             "age": None if pd.isna(row.get("age")) else float(row["age"]),
+            "analysis": row.get("analysis") if isinstance(row.get("analysis"), str) else None,
             "compositeRank": int(row["composite_rank"]),
             "posRank": int(row["pos_rank"]) if pd.notna(row["pos_rank"]) else None,
             "compositeScore": round(float(row["composite_score"]), 5),
