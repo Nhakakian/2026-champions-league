@@ -59,7 +59,12 @@ function renderNote() {
       ? 'Tiers are <strong>his own published tier breaks</strong>.'
       : 'This ranker publishes no positional tiers, so tiers are <strong>derived</strong> ' +
         'from gaps in his own overall ranks.') +
-    ' Drafted players drop off the list.' + tagLegend(b);
+    ' Drafted players drop off the list.' +
+    (b.hasAnalysis
+      ? ' <strong>This ranker writes a note on every player \u2014 click the '
+        + '<span class="dsinfo inline">i</span> on any row to read it.</strong>'
+      : '') +
+    tagLegend(b);
 }
 
 function renderColumns() {
