@@ -900,10 +900,8 @@ td.name { display: flex; align-items: center; gap: 5px; }
 td.name .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ------------------------------------------------------- best available
-   The list scrolls inside its own panel rather than stretching the page.
-   With 50 or more rows a page-length list pushes the sidebar -- your team,
-   what is about to be taken -- off screen, and that sidebar is the reason to
-   look at this page at all. */
-#best { max-height: 62vh; overflow-y: auto; }
+   No inner scroll: the list runs its full length and the page scrolls. A
+   scrollbox inside a scrolling page means two things to scroll and a list
+   whose end you cannot see. */
 .panel-head .bestcount { margin-left: 6px; }
 .bestcount button { min-width: 30px; padding: 2px 6px; font-size: 11px; }

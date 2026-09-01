@@ -14,8 +14,9 @@ let query = '';
 // what you can see covers the gap until your next pick.
 /* How many players Best Available lists. Settable on the page and stored
  * with the rest of the board state, so it is per board and survives a
- * reload. 0 means every player left. */
-const BEST_DEFAULT = 50;
+ * reload. 0 means every player left, which is the default: the list runs its
+ * full length and the page scrolls. */
+const BEST_DEFAULT = 0;   // 0 = every player left
 
 /* ------------------------------------------------------------------ rows */
 function seatOptions(selected) {
