@@ -28,7 +28,9 @@ RANK_HINTS = ("rank", "rk", "adp", "ecr", "overall", "consensus", "avg")
 AGE_HINTS = ("age", "player age")
 # A ranker's own conviction tag ("Target", "I'll Pass", "Avoiding").
 # Only some publish one; it is never inferred.
-STATUS_HINTS = ("status", "tag")
+# "indicators" is Faraz's heading for the same idea; without it his tags
+# vanish on any path that reads them from the frame.
+STATUS_HINTS = ("status", "tag", "indicators")
 # A ranker's own tier break, published alongside the ranking rather than
 # on a separate sheet, and any written note they attach to a player.
 TIER_HINTS = ("tier",)

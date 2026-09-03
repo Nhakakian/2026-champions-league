@@ -238,18 +238,22 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
             rows = from_tier_sheet(src.path, sheet, positions)
             tiers_from = "source"
 
-        # A source may publish its tier inline beside the ranking (Draft
-        # Sharks) rather than on a separate sheet or in a separate file.
-        if not rows and "src_tier" in src.frame.columns and src.frame["src_tier"].notna().any():
-            rows = from_frame_tiers(src.frame, positions)
-            if rows:
-                tiers_from = "source"
-
+        # An explicitly configured positional file beats anything inferred
+        # from the overall list. Faraz's overall file also carries a Tier
+        # column, so deriving from it silently shadowed his real positional
+        # board -- fewer players, and none of his tags.
         pos_glob = spec.get("positional_file")
         if not rows and pos_glob and pos_dir is not None:
             hit = claim(discover(pos_dir), pos_glob) if pos_dir.exists() else None
             if hit:
                 rows = from_positional_file(hit, positions)
+                tiers_from = "source"
+
+        # Only then fall back to a tier published inline beside the ranking,
+        # which is how Draft Sharks ships theirs.
+        if not rows and "src_tier" in src.frame.columns and src.frame["src_tier"].notna().any():
+            rows = from_frame_tiers(src.frame, positions)
+            if rows:
                 tiers_from = "source"
         if not rows:
             rows = derive(src.frame, positions)
