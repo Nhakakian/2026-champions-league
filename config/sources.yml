@@ -85,6 +85,11 @@ sources:
     # This workbook carries a second sheet with his OWN tier breaks per
     # position. The Positional Rankings page uses it verbatim rather than
     # deriving tiers -- he drew those lines, not us.
+    # His positional board now ships as its own file on its own cadence --
+    # the Sept 1 board is newer than the workbook the overall list comes
+    # from. A file in data/sources/positional/ takes precedence over the
+    # sheet of the same name inside the workbook.
+    positional_file: "*joel*"
     positional_sheet: "Positional Rankings"
     columns:
       player: Player

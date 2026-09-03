@@ -41,13 +41,74 @@ def _parse_tier(value: object) -> int | None:
     return int(m.group(1)) if m else None
 
 
+POSITION_WORDS = {
+    "QUARTERBACKS": "QB", "QUARTERBACK": "QB",
+    "RUNNING BACKS": "RB", "RUNNING BACK": "RB", "RUNNINGBACKS": "RB",
+    "WIDE RECEIVERS": "WR", "WIDE RECEIVER": "WR", "RECEIVERS": "WR",
+    "TIGHT ENDS": "TE", "TIGHT END": "TE",
+}
+
+
+def _position_code(label: str) -> str:
+    """Accept "RB" or "Running Backs" as the heading over a column group."""
+    token = str(label).strip().upper()
+    return POSITION_WORDS.get(token, token)
+
+
+def _legend_colours(ws) -> dict[str, str]:
+    """Map font colour -> label using the sheet's own legend.
+
+    These sheets mark conviction with the colour of the player's name and
+    print a legend -- "Target", "I'll Pass", "Avoiding" -- with each word set
+    in the very colour it stands for. Reading the mapping off that legend
+    means a change of palette between updates costs nothing; the two files
+    seen so far already use different greens and reds.
+    """
+    wanted = {"target", "i'll pass", "avoiding", "avoid", "pass"}
+    out: dict[str, str] = {}
+    for row in ws.iter_rows():
+        for cell in row:
+            v = cell.value
+            if not isinstance(v, str):
+                continue
+            label = v.strip()
+            if label.lower() not in wanted:
+                continue
+            font = cell.font
+            if font and font.color is not None and font.color.type == "rgb":
+                rgb = font.color.rgb
+                if rgb and rgb not in ("FF000000", "00000000"):
+                    out[rgb] = label
+    return out
+
+
+def _font_rgb(cell) -> str | None:
+    f = cell.font
+    if f and f.color is not None and f.color.type == "rgb":
+        rgb = f.color.rgb
+        if rgb and rgb not in ("FF000000", "00000000"):
+            return rgb
+    return None
+
+
 def from_tier_sheet(path, sheet: str, positions: tuple[str, ...]) -> list[dict]:
     """Read a sheet laid out as repeating (Tier, Rank, Player) column groups.
 
     Each position gets its own group of three columns, with the position name
-    in the row above the Tier/Rank/Player headers.
+    in the row above the Tier/Rank/Player headers. Conviction tags come from
+    the colour of each player's name, decoded against the sheet's legend.
     """
     raw = pd.read_excel(path, sheet_name=sheet, header=None)
+
+    # openpyxl for the colours; pandas has already dropped them.
+    colour_tag: dict[str, str] = {}
+    ws = None
+    try:
+        from openpyxl import load_workbook
+        ws = load_workbook(path).__getitem__(sheet)
+        colour_tag = _legend_colours(ws)
+    except Exception:
+        ws = None            # colours are a bonus; the ranking still loads
 
     header_row = None
     for r in range(min(12, raw.shape[0])):
@@ -62,7 +123,7 @@ def from_tier_sheet(path, sheet: str, positions: tuple[str, ...]) -> list[dict]:
     for c in range(raw.shape[1]):
         if str(raw.iloc[header_row, c]).strip().lower() != "tier":
             continue
-        label = str(raw.iloc[header_row - 1, c]).strip().upper()
+        label = _position_code(str(raw.iloc[header_row - 1, c]))
         if label in positions:
             groups.append((label, c))
 
@@ -82,8 +143,23 @@ def from_tier_sheet(path, sheet: str, positions: tuple[str, ...]) -> list[dict]:
                 # Trust the sheet's own rank column when it has one.
                 "posRank": int(declared) if pd.notna(declared) and str(declared).isdigit() else rank,
                 "tier": _parse_tier(raw.iloc[r, c]),
+                # Conviction is the colour of the name on these sheets.
+                "tags": _tags_from_colour(ws, r, c + 2, colour_tag),
             })
     return out
+
+
+def _tags_from_colour(ws, row_idx: int, col_idx: int, colour_tag: dict) -> list[str]:
+    """The tag for one player cell, by its font colour. Rows and columns are
+    0-based here and 1-based in openpyxl."""
+    if ws is None or not colour_tag:
+        return []
+    try:
+        rgb = _font_rgb(ws.cell(row=row_idx + 1, column=col_idx + 1))
+    except Exception:
+        return []
+    tag = colour_tag.get(rgb) if rgb else None
+    return [tag] if tag else []
 
 
 def derive(frame: pd.DataFrame, positions: tuple[str, ...],
@@ -233,11 +309,10 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
         # A second sheet in the ranker's own workbook (Joel), or a separate
         # file in data/sources/positional/ (Faraz). Either way these are the
         # ranker's published breaks and are used verbatim.
-        sheet = spec.get("positional_sheet")
-        if sheet:
-            rows = from_tier_sheet(src.path, sheet, positions)
-            tiers_from = "source"
-
+        # A separately published positional file is the most specific thing
+        # available, so it wins over a sheet inside the ranking workbook --
+        # Joel now ships his positional board on its own update cycle, ahead
+        # of the workbook his overall list comes from.
         # An explicitly configured positional file beats anything inferred
         # from the overall list. Faraz's overall file also carries a Tier
         # column, so deriving from it silently shadowed his real positional
@@ -246,7 +321,21 @@ def build(loaded_sources, specs: list[dict], pool: dict[str, dict],
         if not rows and pos_glob and pos_dir is not None:
             hit = claim(discover(pos_dir), pos_glob) if pos_dir.exists() else None
             if hit:
-                rows = from_positional_file(hit, positions)
+                # Two shapes in the wild: a flat list with a Pos column
+                # (Faraz), and repeating per-position column groups (Joel).
+                if hit.suffix.lower() in {".xlsx", ".xlsm", ".xls"}:
+                    sheet_name = spec.get("positional_sheet") or 0
+                    rows = from_tier_sheet(hit, sheet_name, positions)
+                if not rows:
+                    rows = from_positional_file(hit, positions)
+                if rows:
+                    tiers_from = "source"
+
+        # Then a sheet inside the ranking workbook itself.
+        sheet = spec.get("positional_sheet")
+        if not rows and sheet:
+            rows = from_tier_sheet(src.path, sheet, positions)
+            if rows:
                 tiers_from = "source"
 
         # Only then fall back to a tier published inline beside the ranking,
